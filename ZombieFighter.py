@@ -9,7 +9,7 @@ pygame.init()
 FPS = 60 # frames per second to update the screen
 fpsClock = pygame.time.Clock()
 
-DISPLAYSURF = pygame.display.set_mode((500, 600), pygame.RESIZABLE)
+DISPLAYSURF = pygame.display.set_mode((0,0), FULLSCREEN)
 
 pygame.display.set_caption("Zombie Fighter")
 
@@ -31,4 +31,21 @@ class Zombie(pygame.sprite.Sprite):
 
 
 def main():
-    return 1
+    while True:
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == KEYDOWN:
+                if event.key == K_ESCAPE:
+                    pygame.quit()
+                    sys.exit()
+
+        pygame.display.update()
+        fpsClock.tick(FPS)
+
+
+if __name__ == '__main__':
+    main()
