@@ -54,6 +54,8 @@ healthBar = pygame.image.load('Images/HealthBar.png')
 
 def main():
 
+    print("print")
+
     zombieGroup = pygame.sprite.Group()
     zombieGroup.add(Zombie((255, 255, 255), 50, 50))
 
