@@ -55,10 +55,53 @@ class Player(pygame.sprite.Sprite):
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (170, 40, 1300, 70))
         pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(self.health * 1300), 70))
 
+class Weapon(pygame.sprite.Sprite):
+
+    def __init__(self, sprites, posX, posY, speed):
+
+        super().__init__()
+        self.sprites = sprites
+        self.currentSprite = 0
+        self.image = self.sprites[self.currentSprite]
+
+        self.rect = self.image.get_rect()
+        self.rect.topleft = [posX, posY]
+
+        self.isAnimating = False
+        self.speed = speed
+
+    def animate(self):
+        self.isAnimating = True
+
+    def update(self):
+        if self.isAnimating:
+            self.currentSprite += self.speed
+
+            if self.currentSprite >= len(self.sprites):
+                self.currentSprite = 0
+
+            self.image = self.sprites[int(self.currentSprite)]
+
+class Chainsaw(Weapon):
+
+    def __init__(self, posX, posY):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Chainsaw1.png'))
+        self.sprites.append(pygame.image.load('Images/Chainsaw2.png'))
+
+        super().__init__(self.sprites, posX, posY, 0.35)
+
+class Pistol(Weapon):
+    def __init__(self, posX, posY):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Pistol.png'))
+
+        super().__init__(self.sprites, posX, posY, 0.35)
+
+
 
 background = pygame.image.load('Images/Background.png')
 healthBar = pygame.image.load('Images/HealthBar.png')
-
 
 def main():
 
@@ -70,6 +113,10 @@ def main():
     player = Player(50, 50)
     playerGroup = pygame.sprite.Group()
     playerGroup.add(player)
+
+    weapon = Chainsaw(400, 400)
+    weaponGroup = pygame.sprite.Group()
+    weaponGroup.add(weapon)
 
     while True:
 
@@ -83,14 +130,20 @@ def main():
                     pygame.quit()
                     sys.exit()
 
-        DISPLAYSURF.blit(background, (90, 150))
-        DISPLAYSURF.blit(background, (690, 150))
-        DISPLAYSURF.blit(background, (1290, 150))
+                if event.key == K_z:
+                    weapon.animate()
+
+        DISPLAYSURF.blit(background, (0, 150))
+        DISPLAYSURF.blit(pygame.transform.rotate(background, 180), (960, 150))
 
         #zombieGroup.draw(DISPLAYSURF)
         if player.health > 0:
             player.health -= .01
         player.dispHealth()
+
+        weaponGroup.draw(DISPLAYSURF)
+        weaponGroup.update()
+
         pygame.display.update()
 
         fpsClock.tick(FPS)
