@@ -1,5 +1,7 @@
 import pygame, sys
 
+from Projectiles import *
+
 from pygame.locals import *
 from time import sleep
 from random import randint
@@ -16,21 +18,35 @@ pygame.display.set_caption("Zombie Fighter")
 
 class Zombie(pygame.sprite.Sprite):
 
-    def __init__(self, color, width, height):
-        # Call the parent class (Sprite) constructor
+    def __init__(self, posX, posY, speed):
         super().__init__()
 
-        # Create an image of the block, and fill it with a color.
-        # This could also be an image loaded from the disk.
-        self.image = pygame.Surface([width, height])
-        self.image.fill(color)
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Person0.png'))
+        self.sprites.append(pygame.image.load('Images/Person1.png'))
+        self.sprites.append(pygame.image.load('Images/Person2.png'))
+        self.sprites.append(pygame.image.load('Images/Person3.png'))
+        self.sprites.append(pygame.image.load('Images/Person4.png'))
+        self.sprites.append(pygame.image.load('Images/Person5.png'))
 
-        # Fetch the rectangle object that has the dimensions of the image
-        # Update the position of this object by setting the values of rect.x and rect.y
+        self.currentSprite = 0
+        self.image = self.sprites[self.currentSprite]
+
+        self.isAnimating = True
+        self.speed = speed
+
         self.rect = self.image.get_rect()
-        self.rect.topleft = [50, 50]
+        self.rect.topleft = [posX, posY]
 
-    #def upgrade(self):
+    def update(self):
+        if self.isAnimating:
+            self.currentSprite += self.speed
+
+            if self.currentSprite >= len(self.sprites):
+                self.currentSprite = 0
+
+            self.image = self.sprites[int(self.currentSprite)]
+
 
 class Player(pygame.sprite.Sprite):
 
@@ -50,11 +66,6 @@ class Player(pygame.sprite.Sprite):
 
     #def upgrade(self):
 
-    def dispHealth(self):
-        DISPLAYSURF.blit(healthBar, (10, 0))
-        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (170, 40, 1300, 70))
-        pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(self.health * 1300), 70))
-
 class Weapon(pygame.sprite.Sprite):
 
     def __init__(self, sprites, posX, posY, speed):
@@ -65,13 +76,18 @@ class Weapon(pygame.sprite.Sprite):
         self.image = self.sprites[self.currentSprite]
 
         self.rect = self.image.get_rect()
-        self.rect.topleft = [posX, posY]
+        self.posX = posX
+        self.posY = posY
+        self.rect.center = [posX, posY]
 
         self.isAnimating = False
         self.speed = speed
 
     def animate(self):
         self.isAnimating = True
+
+    def stopAnimate(self):
+        self.isAnimating
 
     def update(self):
         if self.isAnimating:
@@ -81,6 +97,8 @@ class Weapon(pygame.sprite.Sprite):
                 self.currentSprite = 0
 
             self.image = self.sprites[int(self.currentSprite)]
+            self.rect = self.image.get_rect()
+            self.rect.center = [self.posX, self.posY]
 
 class Chainsaw(Weapon):
 
@@ -91,13 +109,26 @@ class Chainsaw(Weapon):
 
         super().__init__(self.sprites, posX, posY, 0.35)
 
+class Knife(Weapon):
+    def __init__(self, posX, posY):
+        self.sprites = []
+        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 90))
+        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 45))
+        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 0))
+        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -45))
+        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -90))
+        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -135))
+        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -180))
+        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
+
+        super().__init__(self.sprites, posX, posY, 0.40)
+
 class Pistol(Weapon):
     def __init__(self, posX, posY):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/Pistol.png'))
 
         super().__init__(self.sprites, posX, posY, 0.35)
-
 
 
 background = pygame.image.load('Images/Background.png')
@@ -108,8 +139,9 @@ def main():
     print("print")
 
     zombieGroup = pygame.sprite.Group()
-    zombieGroup.add(Zombie((255, 255, 255), 50, 50))
+    zombieGroup.add(Zombie(1000, 500, 0.35))
 
+    global player
     player = Player(50, 50)
     playerGroup = pygame.sprite.Group()
     playerGroup.add(player)
@@ -117,6 +149,11 @@ def main():
     weapon = Chainsaw(400, 400)
     weaponGroup = pygame.sprite.Group()
     weaponGroup.add(weapon)
+
+
+    projectileGroup = pygame.sprite.Group()
+    knife = KnifeP(400, 600)
+    projectileGroup.add(knife)
 
     while True:
 
@@ -131,18 +168,25 @@ def main():
                     sys.exit()
 
                 if event.key == K_z:
-                    weapon.animate()
+                    #weapon.animate()
+                    knife.animate()
 
-        DISPLAYSURF.blit(background, (0, 150))
-        DISPLAYSURF.blit(pygame.transform.rotate(background, 180), (960, 150))
+        #DISPLAYSURF.blit(background, (0, 150))
+        #DISPLAYSURF.blit(pygame.transform.rotate(background, 180), (960, 150))
+        DISPLAYSURF.fill((69, 69, 69))
+        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (0, 800, 1920, 280))
 
-        #zombieGroup.draw(DISPLAYSURF)
-        if player.health > 0:
-            player.health -= .01
-        player.dispHealth()
+
+
+        dispHealth()
 
         weaponGroup.draw(DISPLAYSURF)
+        zombieGroup.draw(DISPLAYSURF)
+        projectileGroup.draw(DISPLAYSURF)
+
         weaponGroup.update()
+        zombieGroup.update()
+        projectileGroup.update()
 
         pygame.display.update()
 
@@ -151,6 +195,9 @@ def main():
 def drawScreen():
     DISPLAYSURF.blit(background, (0, 0))
 
+def dispHealth():
+    DISPLAYSURF.blit(healthBar, (10, 0))
+    pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(player.health * 1300), 70))
 
 if __name__ == '__main__':
     main()
