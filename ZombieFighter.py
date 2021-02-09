@@ -1,9 +1,9 @@
 import pygame, sys
 
 from Projectiles import *
+from Weapons import *
 
 from pygame.locals import *
-from time import sleep
 from random import randint
 
 pygame.init()
@@ -18,7 +18,7 @@ pygame.display.set_caption("Zombie Fighter")
 
 class Zombie(pygame.sprite.Sprite):
 
-    def __init__(self, posX, posY, speed):
+    def __init__(self, posX, posY, aSpeed, mSpeed):
         super().__init__()
 
         self.sprites = []
@@ -29,23 +29,49 @@ class Zombie(pygame.sprite.Sprite):
         self.sprites.append(pygame.image.load('Images/Person4.png'))
         self.sprites.append(pygame.image.load('Images/Person5.png'))
 
+        self.sprites1 = []
+        for i in range(len(self.sprites)):
+            self.sprites1.append(pygame.transform.flip(self.sprites[i], True, False))
+
+
         self.currentSprite = 0
         self.image = self.sprites[self.currentSprite]
 
         self.isAnimating = True
-        self.speed = speed
+        self.animationSpeed = aSpeed
 
+        self.isMoving = True
+        self.movingSpeed = mSpeed
+
+        self.direction = -1
+
+        self.posX = posX
+        self.posY = posY
         self.rect = self.image.get_rect()
-        self.rect.topleft = [posX, posY]
+        self.rect.midtop = [posX, posY]
+
+    def switchDirection(self):
+        self.direction *= -1
 
     def update(self):
         if self.isAnimating:
-            self.currentSprite += self.speed
+            self.currentSprite += self.animationSpeed
 
             if self.currentSprite >= len(self.sprites):
                 self.currentSprite = 0
+            if self.direction == 1:
+                self.image = self.sprites[int(self.currentSprite)]
+            else:
+                self.image = self.sprites1[int(self.currentSprite)]
 
-            self.image = self.sprites[int(self.currentSprite)]
+        if self.isMoving:
+            self.posX += self.direction * self.movingSpeed
+            self.rect.midtop = [int(self.posX), self.posY]
+
+            if self.posX < 800 and self.direction == -1:
+                self.switchDirection()
+            elif self.posX > 1120 and self.direction == 1:
+                self.switchDirection()
 
 
 class Player(pygame.sprite.Sprite):
@@ -60,78 +86,12 @@ class Player(pygame.sprite.Sprite):
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
         self.rect = self.image.get_rect()
-        self.rect.center
+        self.rect.midtop = [960, 500]
 
         self.health = 1
 
     #def upgrade(self):
 
-class Weapon(pygame.sprite.Sprite):
-
-    def __init__(self, sprites, posX, posY, speed):
-
-        super().__init__()
-        self.sprites = sprites
-        self.currentSprite = 0
-        self.image = self.sprites[self.currentSprite]
-
-        self.rect = self.image.get_rect()
-        self.posX = posX
-        self.posY = posY
-        self.rect.center = [posX, posY]
-
-        self.isAnimating = False
-        self.speed = speed
-
-    def animate(self):
-        self.isAnimating = True
-
-    def stopAnimate(self):
-        self.isAnimating
-
-    def update(self):
-        if self.isAnimating:
-            self.currentSprite += self.speed
-
-            if self.currentSprite >= len(self.sprites):
-                self.currentSprite = 0
-
-            self.image = self.sprites[int(self.currentSprite)]
-            self.rect = self.image.get_rect()
-            self.rect.center = [self.posX, self.posY]
-
-class Chainsaw(Weapon):
-
-    def __init__(self, posX, posY):
-        self.sprites = []
-        self.sprites.append(pygame.image.load('Images/Chainsaw1.png'))
-        self.sprites.append(pygame.image.load('Images/Chainsaw2.png'))
-
-        super().__init__(self.sprites, posX, posY, 0.35)
-
-class Knife(Weapon):
-    def __init__(self, posX, posY):
-        self.sprites = []
-        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 90))
-        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 45))
-        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 0))
-        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -45))
-        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -90))
-        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -135))
-        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -180))
-        self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
-
-        super().__init__(self.sprites, posX, posY, 0.40)
-
-class Pistol(Weapon):
-    def __init__(self, posX, posY):
-        self.sprites = []
-        self.sprites.append(pygame.image.load('Images/Pistol.png'))
-
-        super().__init__(self.sprites, posX, posY, 0.35)
-
-
-background = pygame.image.load('Images/Background.png')
 healthBar = pygame.image.load('Images/HealthBar.png')
 
 def main():
@@ -139,10 +99,10 @@ def main():
     print("print")
 
     zombieGroup = pygame.sprite.Group()
-    zombieGroup.add(Zombie(1000, 500, 0.35))
+    zombieGroup.add(Zombie(700, 500, 0.35, 7))
 
     global player
-    player = Player(50, 50)
+    player = Player(250, 300)
     playerGroup = pygame.sprite.Group()
     playerGroup.add(player)
 
@@ -168,11 +128,9 @@ def main():
                     sys.exit()
 
                 if event.key == K_z:
-                    #weapon.animate()
+                    weapon.animate()
                     knife.animate()
 
-        #DISPLAYSURF.blit(background, (0, 150))
-        #DISPLAYSURF.blit(pygame.transform.rotate(background, 180), (960, 150))
         DISPLAYSURF.fill((69, 69, 69))
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (0, 800, 1920, 280))
 
@@ -180,20 +138,23 @@ def main():
 
         dispHealth()
 
+        playerGroup.draw(DISPLAYSURF)
         weaponGroup.draw(DISPLAYSURF)
         zombieGroup.draw(DISPLAYSURF)
         projectileGroup.draw(DISPLAYSURF)
 
+        playerGroup.update()
         weaponGroup.update()
         zombieGroup.update()
         projectileGroup.update()
+
 
         pygame.display.update()
 
         fpsClock.tick(FPS)
 
-def drawScreen():
-    DISPLAYSURF.blit(background, (0, 0))
+#def drawScreen():
+
 
 def dispHealth():
     DISPLAYSURF.blit(healthBar, (10, 0))

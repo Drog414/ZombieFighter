@@ -1,6 +1,7 @@
 import pygame
 
-class Projectile(pygame.sprite.Sprite):
+
+class Weapon(pygame.sprite.Sprite):
 
     def __init__(self, sprites, posX, posY, speed):
 
@@ -31,11 +32,19 @@ class Projectile(pygame.sprite.Sprite):
                 self.currentSprite = 0
 
             self.image = self.sprites[int(self.currentSprite)]
-
             self.rect = self.image.get_rect()
             self.rect.center = [self.posX, self.posY]
 
-class KnifeP(Projectile):
+class Chainsaw(Weapon):
+
+    def __init__(self, posX, posY):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Chainsaw1.png'))
+        self.sprites.append(pygame.image.load('Images/Chainsaw2.png'))
+
+        super().__init__(self.sprites, posX, posY, 0.35)
+
+class Knife(Weapon):
     def __init__(self, posX, posY):
         self.sprites = []
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 90))
@@ -48,3 +57,10 @@ class KnifeP(Projectile):
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
 
         super().__init__(self.sprites, posX, posY, 0.40)
+
+class Pistol(Weapon):
+    def __init__(self, posX, posY):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Pistol.png'))
+
+        super().__init__(self.sprites, posX, posY, 0.35)
