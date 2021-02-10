@@ -29,10 +29,10 @@ class Zombie(pygame.sprite.Sprite):
         self.sprites.append(pygame.image.load('Images/Person4.png'))
         self.sprites.append(pygame.image.load('Images/Person5.png'))
 
+        #For when the sprite is reversed
         self.sprites1 = []
         for i in range(len(self.sprites)):
             self.sprites1.append(pygame.transform.flip(self.sprites[i], True, False))
-
 
         self.currentSprite = 0
         self.image = self.sprites[self.currentSprite]
@@ -50,8 +50,13 @@ class Zombie(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = [posX, posY]
 
+        self.health = 100
+
     def switchDirection(self):
         self.direction *= -1
+
+    def takeDamage(self, damage):
+        self.health -= damage
 
     def update(self):
         if self.isAnimating:
@@ -68,9 +73,11 @@ class Zombie(pygame.sprite.Sprite):
             self.posX += self.direction * self.movingSpeed
             self.rect.midtop = [int(self.posX), self.posY]
 
-            if self.posX < 800 and self.direction == -1:
+            #self.posX < 800
+            if self.posX < 0 and self.direction == -1:
                 self.switchDirection()
-            elif self.posX > 1120 and self.direction == 1:
+            #self.posX > 1120
+            elif self.posX > 1920 and self.direction == 1:
                 self.switchDirection()
 
 
@@ -89,10 +96,13 @@ class Player(pygame.sprite.Sprite):
         self.rect.midtop = [960, 500]
 
         self.health = 1
+        self.armor = 0
 
     #def upgrade(self):
 
 healthBar = pygame.image.load('Images/HealthBar.png')
+
+#Constants
 
 def main():
 
@@ -112,8 +122,10 @@ def main():
 
 
     projectileGroup = pygame.sprite.Group()
-    knife = KnifeP(400, 600)
+    knife = KnifeP(960, 600, 1)
+    explosion = ExplosionP(800, 400, 0)
     projectileGroup.add(knife)
+
 
     while True:
 
@@ -130,18 +142,24 @@ def main():
                 if event.key == K_z:
                     weapon.animate()
                     knife.animate()
+                    projectileGroup.add(explosion)
+                    explosion.animate()
 
         DISPLAYSURF.fill((69, 69, 69))
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (0, 800, 1920, 280))
+
+        for proj in projectileGroup:
+            pygame.sprite.spritecollide(proj, zombieGroup, False)
 
 
 
         dispHealth()
 
-        playerGroup.draw(DISPLAYSURF)
+        projectileGroup.draw(DISPLAYSURF)
+        #playerGroup.draw(DISPLAYSURF)
         weaponGroup.draw(DISPLAYSURF)
         zombieGroup.draw(DISPLAYSURF)
-        projectileGroup.draw(DISPLAYSURF)
+
 
         playerGroup.update()
         weaponGroup.update()

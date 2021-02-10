@@ -2,12 +2,20 @@ import pygame
 
 class Projectile(pygame.sprite.Sprite):
 
-    def __init__(self, sprites, posX, posY, speed):
+    def __init__(self, sprites, posX, posY, aSpeed, mSpeed, direction, damage):
 
         super().__init__()
         self.sprites = sprites
         self.currentSprite = 0
         self.image = self.sprites[self.currentSprite]
+
+        if direction != 0:
+            # For when the sprite is reversed
+            self.sprites1 = []
+            for i in range(len(self.sprites)):
+                self.sprites1.append(pygame.transform.flip(self.sprites[i], True, False))
+
+            self.direction = direction
 
         self.rect = self.image.get_rect()
         self.posX = posX
@@ -15,7 +23,12 @@ class Projectile(pygame.sprite.Sprite):
         self.rect.center = [posX, posY]
 
         self.isAnimating = False
-        self.speed = speed
+        self.animationSpeed = aSpeed
+
+        self.isMoving = True
+        self.movingSpeed = mSpeed
+
+        self.damage = damage
 
     def animate(self):
         self.isAnimating = True
@@ -23,9 +36,12 @@ class Projectile(pygame.sprite.Sprite):
     def stopAnimate(self):
         self.isAnimating
 
+    def getDamage(self):
+        return self.damage
+
     def update(self):
         if self.isAnimating:
-            self.currentSprite += self.speed
+            self.currentSprite += self.animationSpeed
 
             if self.currentSprite >= len(self.sprites):
                 self.currentSprite = 0
@@ -36,7 +52,7 @@ class Projectile(pygame.sprite.Sprite):
             self.rect.center = [self.posX, self.posY]
 
 class KnifeP(Projectile):
-    def __init__(self, posX, posY):
+    def __init__(self, posX, posY, direction):
         self.sprites = []
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 90))
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 45))
@@ -47,4 +63,12 @@ class KnifeP(Projectile):
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -180))
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
 
-        super().__init__(self.sprites, posX, posY, 0.40)
+        super().__init__(self.sprites, posX, posY, 0.4, 0, direction, 50)
+
+class ExplosionP(Projectile):
+    def __init__(self, posX, posY, direction):
+        self.sprites = []
+        for i in range(16):
+            self.sprites.append(pygame.image.load('Images/Explosion' + str(i) + '.png'))
+
+        super().__init__(self.sprites, posX, posY, 0.4, 0, direction, 50)
