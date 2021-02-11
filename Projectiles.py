@@ -22,10 +22,13 @@ class Projectile(pygame.sprite.Sprite):
         self.posY = posY
         self.rect.center = [posX, posY]
 
-        self.isAnimating = False
+        self.isAnimating = True
         self.animationSpeed = aSpeed
 
-        self.isMoving = True
+        if mSpeed == 0:
+            self.isMoving = False
+        else:
+            self.isMoving = True
         self.movingSpeed = mSpeed
 
         self.damage = damage
@@ -51,6 +54,11 @@ class Projectile(pygame.sprite.Sprite):
             self.rect = self.image.get_rect()
             self.rect.center = [self.posX, self.posY]
 
+        if self.isMoving:
+            self.posX += self.direction * self.movingSpeed
+            self.rect.center = [int(self.posX), self.posY]
+
+
 class KnifeP(Projectile):
     def __init__(self, posX, posY, direction):
         self.sprites = []
@@ -63,7 +71,7 @@ class KnifeP(Projectile):
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -180))
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
 
-        super().__init__(self.sprites, posX, posY, 0.4, 0, direction, 50)
+        super().__init__(self.sprites, posX, posY, 0.4, 10, direction, 50)
 
 class ExplosionP(Projectile):
     def __init__(self, posX, posY, direction):
@@ -71,4 +79,5 @@ class ExplosionP(Projectile):
         for i in range(16):
             self.sprites.append(pygame.image.load('Images/Explosion' + str(i) + '.png'))
 
+        #Explosion should eventually do 0 damage, maybe make a seperate effects class?
         super().__init__(self.sprites, posX, posY, 0.4, 0, direction, 50)

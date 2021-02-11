@@ -3,7 +3,7 @@ import pygame
 
 class Weapon(pygame.sprite.Sprite):
 
-    def __init__(self, sprites, posX, posY, speed):
+    def __init__(self, sprites, posX, posY, aSpeed, direction):
 
         super().__init__()
         self.sprites = sprites
@@ -16,7 +16,7 @@ class Weapon(pygame.sprite.Sprite):
         self.rect.center = [posX, posY]
 
         self.isAnimating = False
-        self.speed = speed
+        self.animationSpeed = aSpeed
 
     def animate(self):
         self.isAnimating = True
@@ -26,7 +26,7 @@ class Weapon(pygame.sprite.Sprite):
 
     def update(self):
         if self.isAnimating:
-            self.currentSprite += self.speed
+            self.currentSprite += self.animationSpeed
 
             if self.currentSprite >= len(self.sprites):
                 self.currentSprite = 0
@@ -42,7 +42,7 @@ class Chainsaw(Weapon):
         self.sprites.append(pygame.image.load('Images/Chainsaw1.png'))
         self.sprites.append(pygame.image.load('Images/Chainsaw2.png'))
 
-        super().__init__(self.sprites, posX, posY, 0.35)
+        super().__init__(self.sprites, posX, posY, 0.35, 1)
 
 class Knife(Weapon):
     def __init__(self, posX, posY):
@@ -56,11 +56,11 @@ class Knife(Weapon):
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -180))
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
 
-        super().__init__(self.sprites, posX, posY, 0.40)
+        super().__init__(self.sprites, posX, posY, 0.40, 1)
 
 class Pistol(Weapon):
     def __init__(self, posX, posY):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/Pistol.png'))
 
-        super().__init__(self.sprites, posX, posY, 0.35)
+        super().__init__(self.sprites, posX, posY, 0, 1)
