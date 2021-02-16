@@ -18,7 +18,7 @@ pygame.display.set_caption("Zombie Fighter")
 
 class Zombie(pygame.sprite.Sprite):
 
-    def __init__(self, posX, posY, aSpeed, mSpeed, direction):
+    def __init__(self, posX, posY, aSpeed, mSpeed, direction, playerPos):
         super().__init__()
 
         self.sprites = []
@@ -48,15 +48,19 @@ class Zombie(pygame.sprite.Sprite):
         self.posX = posX
         self.posY = posY
         self.rect = self.image.get_rect()
-        self.rect.midtop = [posX, posY]
+        self.rect.midtop = [posX - playerPos, posY]
 
         self.health = 100
+        self.damage = 0.25
 
     def switchDirection(self):
         self.direction *= -1
 
     def takeDamage(self, damage):
         self.health -= damage
+
+    def dealDamage(self):
+        return self.damage
 
     def update(self):
         if self.isAnimating:
@@ -95,7 +99,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = [960, 500]
 
-        self.playerPos = 0
+        self.playerPos = PLAYAREA / 2
 
         self.direction = 1
 
@@ -122,11 +126,11 @@ def main():
 
     print("print")
 
+    global zombieGroup
     zombieGroup = pygame.sprite.Group()
-    zombieGroup.add(Zombie(5000, 500, 0.35, 7, -1))
 
     global player
-    player = Player(100, 300, 15)
+    player = Player(100, 300, 10)
     playerGroup = pygame.sprite.Group()
     playerGroup.add(player)
 
@@ -136,9 +140,7 @@ def main():
 
 
     projectileGroup = pygame.sprite.Group()
-    knife = KnifeP(960, 600, -1)
-    explosion = ExplosionP(800, 400, 0)
-    #projectileGroup.add(knife)
+
 
 
     while True:
@@ -154,23 +156,27 @@ def main():
                     sys.exit()
 
                 if event.key == K_z:
-                    weapon.animate()
-                    knife.animate()
-                    projectileGroup.add(explosion)
-                    explosion.animate()
+                    projectileGroup.add(KnifeP(960, 600, player.direction))
+
+                if event.key == K_SPACE:
+                    spawnZombie()
+
+        shift = 0
 
         if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 0:
             player.playerPos -= player.movingSpeed
             player.direction = -1
+            shift += player.direction * player.movingSpeed
 
         if pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
             player.playerPos += player.movingSpeed
             player.direction = 1
+            shift += player.direction * player.movingSpeed
 
         DISPLAYSURF.fill((69, 69, 69))
-        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, (1060 - player.playerPos + PLAYAREA), 280))
+        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 600, 10, 200))
-        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1060 - player.playerPos + PLAYAREA, 600, 10, 200))
+        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1050 - player.playerPos + PLAYAREA, 600, 10, 200))
 
         for zombie in zombieGroup:
             if pygame.sprite.spritecollide(zombie, projectileGroup, False):
@@ -180,6 +186,9 @@ def main():
                         projectileGroup.remove(proj)
                         if zombie.health <= 0:
                             zombieGroup.remove(zombie)
+
+            if pygame.sprite.spritecollide(zombie, playerGroup, False):
+                player.takeDamage(zombie.dealDamage())
 
 
 
@@ -194,7 +203,7 @@ def main():
         playerGroup.update()
         weaponGroup.update()
         zombieGroup.update()
-        projectileGroup.update()
+        projectileGroup.update(player.playerPos, shift)
 
 
         pygame.display.update()
@@ -207,6 +216,15 @@ def main():
 def dispHealth():
     DISPLAYSURF.blit(healthBar, (10, 0))
     pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(player.health * 13), 70))
+    pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1500, 0, 420, 150))
+
+def spawnZombie():
+    posX = randint(0, PLAYAREA)
+    if posX < player.playerPos:
+        direction = 1
+    else:
+        direction = -1
+    zombieGroup.add(Zombie(posX, 500, 0.35, 7, direction, player.playerPos))
 
 if __name__ == '__main__':
     main()

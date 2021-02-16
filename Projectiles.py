@@ -42,7 +42,7 @@ class Projectile(pygame.sprite.Sprite):
     def getDamage(self):
         return self.damage
 
-    def update(self):
+    def update(self, playerPos, shift):
         if self.isAnimating:
             self.currentSprite += self.animationSpeed
 
@@ -55,7 +55,7 @@ class Projectile(pygame.sprite.Sprite):
             self.rect.center = [self.posX, self.posY]
 
         if self.isMoving:
-            self.posX += self.direction * self.movingSpeed
+            self.posX += self.direction * self.movingSpeed - shift
             self.rect.center = [int(self.posX), self.posY]
 
 
@@ -71,7 +71,7 @@ class KnifeP(Projectile):
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -180))
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
 
-        super().__init__(self.sprites, posX, posY, 0.4, 10, direction, 50)
+        super().__init__(self.sprites, posX, posY, 0.4, 20, direction, 50)
 
 class ExplosionP(Projectile):
     def __init__(self, posX, posY, direction):
