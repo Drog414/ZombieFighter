@@ -124,8 +124,6 @@ PLAYAREA = 10000
 
 def main():
 
-    print("print")
-
     global zombieGroup
     zombieGroup = pygame.sprite.Group()
 
@@ -144,7 +142,6 @@ def main():
 
 
     while True:
-
         for event in pygame.event.get():
             if event.type == QUIT:
                 pygame.quit()
@@ -187,10 +184,13 @@ def main():
                         if zombie.health <= 0:
                             zombieGroup.remove(zombie)
 
+
             if pygame.sprite.spritecollide(zombie, playerGroup, False):
                 player.takeDamage(zombie.dealDamage())
 
-
+        for proj in projectileGroup:
+            if proj.posX + player.playerPos > PLAYAREA + 1000 or proj.posX + player.playerPos < -100:
+                projectileGroup.remove(proj)
 
         dispHealth()
 
@@ -215,7 +215,8 @@ def main():
 
 def dispHealth():
     DISPLAYSURF.blit(healthBar, (10, 0))
-    pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(player.health * 13), 70))
+    if player.health > 0:
+        pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(player.health * 13), 70))
     pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1500, 0, 420, 150))
 
 def spawnZombie():

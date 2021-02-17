@@ -52,11 +52,11 @@ class Projectile(pygame.sprite.Sprite):
             self.image = self.sprites[int(self.currentSprite)]
 
             self.rect = self.image.get_rect()
-            self.rect.center = [self.posX, self.posY]
 
         if self.isMoving:
-            self.posX += self.direction * self.movingSpeed - shift
-            self.rect.center = [int(self.posX), self.posY]
+            self.posX += self.direction * self.movingSpeed
+
+        self.rect.center = [int(self.posX), self.posY]
 
 
 class KnifeP(Projectile):
