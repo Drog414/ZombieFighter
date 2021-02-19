@@ -42,14 +42,18 @@ class Projectile(pygame.sprite.Sprite):
     def getDamage(self):
         return self.damage
 
-    def update(self, playerPos, shift):
+    def update(self, playerPos):
         if self.isAnimating:
             self.currentSprite += self.animationSpeed
 
             if self.currentSprite >= len(self.sprites):
                 self.currentSprite = 0
 
-            self.image = self.sprites[int(self.currentSprite)]
+            if self.direction == -1:
+                self.image = self.sprites1[int(self.currentSprite)]
+            else:
+                self.image = self.sprites[int(self.currentSprite)]
+
 
             self.rect = self.image.get_rect()
 

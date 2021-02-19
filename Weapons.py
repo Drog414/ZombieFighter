@@ -10,6 +10,14 @@ class Weapon(pygame.sprite.Sprite):
         self.currentSprite = 0
         self.image = self.sprites[self.currentSprite]
 
+        if direction != 0:
+            # For when the sprite is reversed
+            self.sprites1 = []
+            for i in range(len(self.sprites)):
+                self.sprites1.append(pygame.transform.flip(self.sprites[i], True, False))
+
+            self.direction = direction
+
         self.rect = self.image.get_rect()
         self.posX = posX
         self.posY = posY
@@ -18,22 +26,32 @@ class Weapon(pygame.sprite.Sprite):
         self.isAnimating = False
         self.animationSpeed = aSpeed
 
+        self.currentWeapon = True
+
     def animate(self):
         self.isAnimating = True
 
     def stopAnimate(self):
         self.isAnimating
 
+    def switchDirection(self):
+        self.direction *= -1
+
     def update(self):
-        if self.isAnimating:
-            self.currentSprite += self.animationSpeed
+        if self.currentWeapon:
+            if self.isAnimating:
+                self.currentSprite += self.animationSpeed
 
-            if self.currentSprite >= len(self.sprites):
-                self.currentSprite = 0
+                if self.currentSprite >= len(self.sprites):
+                    self.currentSprite = 0
 
-            self.image = self.sprites[int(self.currentSprite)]
-            self.rect = self.image.get_rect()
-            self.rect.center = [self.posX, self.posY]
+                if self.direction == -1:
+                    self.image = self.sprites1[int(self.currentSprite)]
+                else:
+                    self.image = self.sprites[int(self.currentSprite)]
+
+                self.rect = self.image.get_rect()
+                self.rect.center = [self.posX, self.posY]
 
 class Chainsaw(Weapon):
 

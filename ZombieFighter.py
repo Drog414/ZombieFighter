@@ -68,10 +68,11 @@ class Zombie(pygame.sprite.Sprite):
 
             if self.currentSprite >= len(self.sprites):
                 self.currentSprite = 0
-            if self.direction == 1:
-                self.image = self.sprites[int(self.currentSprite)]
-            else:
+
+            if self.direction == -1:
                 self.image = self.sprites1[int(self.currentSprite)]
+            else:
+                self.image = self.sprites[int(self.currentSprite)]
 
         if self.isMoving:
             self.posX += (self.direction * self.movingSpeed)
@@ -132,9 +133,10 @@ def main():
     playerGroup = pygame.sprite.Group()
     playerGroup.add(player)
 
-    weapon = Chainsaw(400, 400)
+    global currentWeapon
+    currentWeapon = Chainsaw(960, 600)
     weaponGroup = pygame.sprite.Group()
-    weaponGroup.add(weapon)
+    weaponGroup.add(currentWeapon)
 
 
     projectileGroup = pygame.sprite.Group()
@@ -158,17 +160,15 @@ def main():
                 if event.key == K_SPACE:
                     spawnZombie()
 
-        shift = 0
-
         if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 0:
             player.playerPos -= player.movingSpeed
             player.direction = -1
-            shift += player.direction * player.movingSpeed
+            currentWeapon.direction = -1
 
         if pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
             player.playerPos += player.movingSpeed
             player.direction = 1
-            shift += player.direction * player.movingSpeed
+            currentWeapon.direction = 1
 
         DISPLAYSURF.fill((69, 69, 69))
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
@@ -203,7 +203,7 @@ def main():
         playerGroup.update()
         weaponGroup.update()
         zombieGroup.update()
-        projectileGroup.update(player.playerPos, shift)
+        projectileGroup.update(player.playerPos)
 
 
         pygame.display.update()
