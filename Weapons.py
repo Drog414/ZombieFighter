@@ -1,5 +1,6 @@
 import pygame
 
+from Projectiles import *
 
 class Weapon(pygame.sprite.Sprite):
 
@@ -9,6 +10,14 @@ class Weapon(pygame.sprite.Sprite):
         self.sprites = sprites
         self.currentSprite = 0
         self.image = self.sprites[self.currentSprite]
+
+        if direction != 0:
+            # For when the sprite is reversed
+            self.sprites1 = []
+            for i in range(len(self.sprites)):
+                self.sprites1.append(pygame.transform.flip(self.sprites[i], True, False))
+
+            self.direction = direction
 
         self.rect = self.image.get_rect()
         self.posX = posX
@@ -31,21 +40,23 @@ class Weapon(pygame.sprite.Sprite):
             if self.currentSprite >= len(self.sprites):
                 self.currentSprite = 0
 
+        if self.direction == -1:
+            self.image = self.sprites1[int(self.currentSprite)]
+        else:
             self.image = self.sprites[int(self.currentSprite)]
-            self.rect = self.image.get_rect()
-            self.rect.center = [self.posX, self.posY]
+
 
 class Chainsaw(Weapon):
 
-    def __init__(self, posX, posY):
+    def __init__(self, posX, posY, direction):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/Chainsaw1.png'))
         self.sprites.append(pygame.image.load('Images/Chainsaw2.png'))
 
-        super().__init__(self.sprites, posX, posY, 0.35, 1)
+        super().__init__(self.sprites, posX, posY, 0.35, direction)
 
 class Knife(Weapon):
-    def __init__(self, posX, posY):
+    def __init__(self, posX, posY, direction):
         self.sprites = []
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 90))
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), 45))
@@ -56,11 +67,48 @@ class Knife(Weapon):
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -180))
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
 
-        super().__init__(self.sprites, posX, posY, 0.40, 1)
+        super().__init__(self.sprites, posX, posY, 0.40, direction)
+
+    def getProj(self, direction):
+        return KnifeP(960, 600, direction)
 
 class Pistol(Weapon):
-    def __init__(self, posX, posY):
+    def __init__(self, posX, posY, direction):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/Pistol.png'))
 
-        super().__init__(self.sprites, posX, posY, 0, 1)
+        super().__init__(self.sprites, posX, posY, 0, direction)
+
+    def getProj(self, direction):
+        return BulletP(960, 600, direction)
+
+class Flamethrower(Weapon):
+    def __init__(self, posX, posY, direction):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Flamethrower.png'))
+
+        super().__init__(self.sprites, posX, posY, 0, direction)
+
+    def getProj(self, direction):
+        return BulletP(960, 600, direction)
+
+class Skorpian(Weapon):
+    def __init__(self, posX, posY, direction):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Skorpion.png'))
+
+        super().__init__(self.sprites, posX, posY, 0, direction)
+
+    def getProj(self, direction):
+        return BulletP(960, 600, direction)
+
+class AssaultRifle(Weapon):
+    def __init__(self, posX, posY, direction):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/AssaultRifle.png'))
+
+        super().__init__(self.sprites, posX, posY, 0, direction)
+
+    def getProj(self, direction):
+        return BulletP(960, 600, direction)
+

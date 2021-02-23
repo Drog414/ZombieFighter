@@ -134,9 +134,18 @@ def main():
     playerGroup = pygame.sprite.Group()
     playerGroup.add(player)
 
-    weapon = Chainsaw(400, 400)
+    weapons = []
+    weapons.append(Pistol(960, 600, player.direction))
+    weapons.append(Knife(960, 600, player.direction))
+    weapons.append(Chainsaw(960, 600, player.direction))
+    weapons.append(Skorpian(960, 600, player.direction))
+    weapons.append(AssaultRifle(960, 600, player.direction))
+    weapons.append(Flamethrower(960, 600, player.direction))
+
     weaponGroup = pygame.sprite.Group()
-    weaponGroup.add(weapon)
+
+    currentWeapon = 0
+    weaponGroup.add(weapons[currentWeapon])
 
 
     projectileGroup = pygame.sprite.Group()
@@ -156,22 +165,36 @@ def main():
                     sys.exit()
 
                 if event.key == K_z:
-                    projectileGroup.add(KnifeP(960, 600, player.direction))
+                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
 
                 if event.key == K_SPACE:
                     spawnZombie()
 
-        shift = 0
+                if event.key == K_x:
+                    weaponGroup.remove(weapons[currentWeapon])
+                    currentWeapon += 1
+                    if currentWeapon >= len(weapons):
+                        currentWeapon = 0
+                    weaponGroup.add(weapons[currentWeapon])
+                    weapons[currentWeapon].direction = player.direction
+
+                if event.key == K_LSHIFT:
+                    weaponGroup.remove(weapons[currentWeapon])
+                    currentWeapon -= 1
+                    if currentWeapon < 0:
+                        currentWeapon = len(weapons) - 1
+                    weaponGroup.add(weapons[currentWeapon])
+                    weapons[currentWeapon].direction = player.direction
 
         if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 0:
             player.playerPos -= player.movingSpeed
             player.direction = -1
-            shift += player.direction * player.movingSpeed
+            weapons[currentWeapon].direction = -1
 
         if pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
             player.playerPos += player.movingSpeed
             player.direction = 1
-            shift += player.direction * player.movingSpeed
+            weapons[currentWeapon].direction = 1
 
         DISPLAYSURF.fill((69, 69, 69))
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
@@ -190,8 +213,6 @@ def main():
             if pygame.sprite.spritecollide(zombie, playerGroup, False):
                 player.takeDamage(zombie.dealDamage())
 
-
-
         dispHealth()
 
         projectileGroup.draw(DISPLAYSURF)
@@ -203,7 +224,7 @@ def main():
         playerGroup.update()
         weaponGroup.update()
         zombieGroup.update()
-        projectileGroup.update(player.playerPos, shift)
+        projectileGroup.update(player.playerPos)
 
 
         pygame.display.update()
