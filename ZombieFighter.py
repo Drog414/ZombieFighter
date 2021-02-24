@@ -144,7 +144,7 @@ def main():
 
     weaponGroup = pygame.sprite.Group()
 
-    currentWeapon = 0
+    currentWeapon = 5
     weaponGroup.add(weapons[currentWeapon])
 
 
@@ -165,7 +165,8 @@ def main():
                     sys.exit()
 
                 if event.key == K_z:
-                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                    if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj:
+                        projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
 
                 if event.key == K_SPACE:
                     spawnZombie()
@@ -190,6 +191,7 @@ def main():
             player.playerPos -= player.movingSpeed
             player.direction = -1
             weapons[currentWeapon].direction = -1
+            #if weapons[currentWeapon].switchProjDir:
 
         if pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
             player.playerPos += player.movingSpeed
@@ -206,7 +208,9 @@ def main():
                 for proj in projectileGroup:
                     if pygame.sprite.spritecollide(proj, zombieGroup, False):
                         zombie.takeDamage(proj.getDamage())
-                        projectileGroup.remove(proj)
+                        if proj.deleteOnImpact:
+                            projectileGroup.remove(proj)
+                            weapons[currentWeapon].numProj -= 1
                         if zombie.health <= 0:
                             zombieGroup.remove(zombie)
 

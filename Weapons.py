@@ -27,6 +27,8 @@ class Weapon(pygame.sprite.Sprite):
         self.isAnimating = False
         self.animationSpeed = aSpeed
 
+
+
     def animate(self):
         self.isAnimating = True
 
@@ -53,6 +55,8 @@ class Chainsaw(Weapon):
         self.sprites.append(pygame.image.load('Images/Chainsaw1.png'))
         self.sprites.append(pygame.image.load('Images/Chainsaw2.png'))
 
+        self.hold = True
+
         super().__init__(self.sprites, posX, posY, 0.35, direction)
 
 class Knife(Weapon):
@@ -67,6 +71,12 @@ class Knife(Weapon):
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -180))
         self.sprites.append(pygame.transform.rotate(pygame.image.load('Images/Knife.png'), -225))
 
+        self.hold = False
+        self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
+        self.numProj = 0
+
+        self.switchProjDir = False
+
         super().__init__(self.sprites, posX, posY, 0.40, direction)
 
     def getProj(self, direction):
@@ -76,6 +86,12 @@ class Pistol(Weapon):
     def __init__(self, posX, posY, direction):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/Pistol.png'))
+
+        self.hold = False
+        self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
+        self.numProj = 0
+
+        self.switchProjDir = False
 
         super().__init__(self.sprites, posX, posY, 0, direction)
 
@@ -87,15 +103,28 @@ class Flamethrower(Weapon):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/Flamethrower.png'))
 
+        self.hold = True
+        self.maxProj = 1
+        self.numProj = 0
+
+        self.switchProjDir = True
+
         super().__init__(self.sprites, posX, posY, 0, direction)
 
     def getProj(self, direction):
-        return BulletP(960, 600, direction)
+        self.numProj += 1
+        return FireP(960, 600, direction)
 
 class Skorpian(Weapon):
     def __init__(self, posX, posY, direction):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/Skorpion.png'))
+
+        self.hold = True
+        self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
+        self.numProj = 0
+
+        self.switchProjDir = False
 
         super().__init__(self.sprites, posX, posY, 0, direction)
 
@@ -106,6 +135,12 @@ class AssaultRifle(Weapon):
     def __init__(self, posX, posY, direction):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/AssaultRifle.png'))
+
+        self.hold = True
+        self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
+        self.numProj = 0
+
+        self.switchProjDir = False
 
         super().__init__(self.sprites, posX, posY, 0, direction)
 
