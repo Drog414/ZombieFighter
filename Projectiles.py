@@ -89,10 +89,21 @@ class ExplosionP(Projectile):
         #Explosion should eventually do 0 damage, maybe make a seperate effects class?
         super().__init__(self.sprites, posX, posY, 0.4, 0, direction, 50)
 
-class BulletP(Projectile):
+class BulletSmallP(Projectile):
     def __init__(self, posX, posY, direction):
         self.sprites = []
         self.sprites.append(pygame.image.load('Images/Bullet.png'))
+
+        self.deleteOnImpact = True
+
+        super().__init__(self.sprites, posX, posY, 0.4, 25, direction, 20)
+
+class BulletLargeP(Projectile):
+    def __init__(self, posX, posY, direction):
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Bullet.png'))
+
+        self.deleteOnImpact = True
 
         super().__init__(self.sprites, posX, posY, 0.4, 25, direction, 25)
 
@@ -104,7 +115,16 @@ class FireP(Projectile):
 
         self.deleteOnImpact = False
 
-        super().__init__(self.sprites, posX, posY, 0.3, 0, direction, 25)
+        super().__init__(self.sprites, posX, posY, 0.3, 0, direction, 2)
+
+        if self.direction == -1:
+            self.image = self.sprites1[int(self.currentSprite)]
+            self.rect = self.image.get_rect()
+            self.rect.midright = [int(self.posX), self.posY]
+        else:
+            self.image = self.sprites[int(self.currentSprite)]
+            self.rect = self.image.get_rect()
+            self.rect.midleft = [int(self.posX), self.posY]
 
     def update(self, playerPos):
         if self.isAnimating:

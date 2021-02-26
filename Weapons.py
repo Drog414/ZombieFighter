@@ -74,6 +74,7 @@ class Knife(Weapon):
         self.hold = False
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
         self.numProj = 0
+        self.fireRate = 1
 
         self.switchProjDir = False
 
@@ -96,7 +97,7 @@ class Pistol(Weapon):
         super().__init__(self.sprites, posX, posY, 0, direction)
 
     def getProj(self, direction):
-        return BulletP(960, 600, direction)
+        return BulletSmallP(960, 600, direction)
 
 class Flamethrower(Weapon):
     def __init__(self, posX, posY, direction):
@@ -106,8 +107,9 @@ class Flamethrower(Weapon):
         self.hold = True
         self.maxProj = 1
         self.numProj = 0
+        self.fireRate = 1
 
-        self.switchProjDir = True
+        self.projDirection = direction
 
         super().__init__(self.sprites, posX, posY, 0, direction)
 
@@ -123,13 +125,14 @@ class Skorpian(Weapon):
         self.hold = True
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
         self.numProj = 0
+        self.fireRate = 0.20
 
         self.switchProjDir = False
 
         super().__init__(self.sprites, posX, posY, 0, direction)
 
     def getProj(self, direction):
-        return BulletP(960, 600, direction)
+        return BulletSmallP(960, 600, direction)
 
 class AssaultRifle(Weapon):
     def __init__(self, posX, posY, direction):
@@ -139,11 +142,12 @@ class AssaultRifle(Weapon):
         self.hold = True
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
         self.numProj = 0
+        self.fireRate = 0.25
 
         self.switchProjDir = False
 
         super().__init__(self.sprites, posX, posY, 0, direction)
 
     def getProj(self, direction):
-        return BulletP(960, 600, direction)
+        return BulletLargeP(960, 600, direction)
 

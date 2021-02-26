@@ -108,6 +108,11 @@ class Player(pygame.sprite.Sprite):
 
         self.movingSpeed = mSpeed
 
+        self.bulletAmmo = 0
+        self.knifeAmmo = 0
+        self.fireAmmo = 0
+        self.money = 0
+
     def takeDamage(self, damage):
         self.health -= damage + int(self.armor * damage)
 
@@ -150,7 +155,7 @@ def main():
 
     projectileGroup = pygame.sprite.Group()
 
-
+    fireRateCounter = 0
 
     while True:
 
@@ -164,7 +169,7 @@ def main():
                     pygame.quit()
                     sys.exit()
 
-                if event.key == K_z:
+                if event.key == K_z and not weapons[currentWeapon].hold:
                     if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj:
                         projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
 
@@ -178,6 +183,7 @@ def main():
                         currentWeapon = 0
                     weaponGroup.add(weapons[currentWeapon])
                     weapons[currentWeapon].direction = player.direction
+                    fireRateCounter = 1
 
                 if event.key == K_LSHIFT:
                     weaponGroup.remove(weapons[currentWeapon])
@@ -186,17 +192,39 @@ def main():
                         currentWeapon = len(weapons) - 1
                     weaponGroup.add(weapons[currentWeapon])
                     weapons[currentWeapon].direction = player.direction
+                    fireRateCounter = 1
 
         if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 0:
             player.playerPos -= player.movingSpeed
             player.direction = -1
             weapons[currentWeapon].direction = -1
-            #if weapons[currentWeapon].switchProjDir:
+            if type(weapons[currentWeapon]) is Flamethrower:
+                if weapons[currentWeapon].projDirection == 1:
+                    weapons[currentWeapon].projDirection = -1
+                    for proj in projectileGroup:
+                        if type(proj) is FireP:
+                            projectileGroup.remove(proj)
+                            projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                            break
 
-        if pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
+        elif pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
             player.playerPos += player.movingSpeed
             player.direction = 1
             weapons[currentWeapon].direction = 1
+            if type(weapons[currentWeapon]) is Flamethrower:
+                if weapons[currentWeapon].projDirection == -1:
+                    weapons[currentWeapon].projDirection = 1
+                    for proj in projectileGroup:
+                        if type(proj) is FireP:
+                            projectileGroup.remove(proj)
+                            projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                            break
+
+        if pygame.key.get_pressed()[pygame.K_z] and weapons[currentWeapon].hold:
+            fireRateCounter += weapons[currentWeapon].fireRate
+            if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) > 1:
+                projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                fireRateCounter = 0
 
         DISPLAYSURF.fill((69, 69, 69))
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
@@ -216,6 +244,10 @@ def main():
 
             if pygame.sprite.spritecollide(zombie, playerGroup, False):
                 player.takeDamage(zombie.dealDamage())
+
+        for proj in projectileGroup:
+            if proj.posX + player.playerPos > PLAYAREA + 1000 or proj.posX + player.playerPos < -100:
+                projectileGroup.remove(proj)
 
         dispHealth()
 
