@@ -156,6 +156,7 @@ def main():
     projectileGroup = pygame.sprite.Group()
 
     fireRateCounter = 0
+    currentFlameSprite = 0
 
     while True:
 
@@ -202,7 +203,7 @@ def main():
                 if weapons[currentWeapon].projDirection == 1:
                     weapons[currentWeapon].projDirection = -1
                     for proj in projectileGroup:
-                        if type(proj) is FireP:
+                        if type(proj) is FireP or type(proj) is FireStartP:
                             projectileGroup.remove(proj)
                             projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                             break
@@ -215,16 +216,42 @@ def main():
                 if weapons[currentWeapon].projDirection == -1:
                     weapons[currentWeapon].projDirection = 1
                     for proj in projectileGroup:
-                        if type(proj) is FireP:
+                        if type(proj) is FireP or type(proj) is FireStartP:
                             projectileGroup.remove(proj)
                             projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                             break
 
         if pygame.key.get_pressed()[pygame.K_z] and weapons[currentWeapon].hold:
             fireRateCounter += weapons[currentWeapon].fireRate
-            if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) > 1:
-                projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
-                fireRateCounter = 0
+            if type(weapons[currentWeapon]) is not Flamethrower:
+                if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) > 1:
+                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                    fireRateCounter = 0
+            else:
+                if not weapons[currentWeapon].flameOn:
+                    projectileGroup.add(FireStartP(960, 600, player.direction, currentFlameSprite))
+                    weapons[currentWeapon].flameOn = True
+                else:
+                    if not weapons[currentWeapon].flameFull:
+                        for proj in projectileGroup:
+                            if type(proj) is FireStartP:
+                                currentFlameSprite = proj.currentSprite
+                                if proj.currentSprite == 8:
+                                    projectileGroup.remove(proj)
+                                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                                    weapons[currentWeapon].flameFull = True
+                                    break
+
+        #Flamethrower power down
+        """elif type(weapons[currentWeapon]) is Flamethrower:
+            if weapons[currentWeapon].flameFull:
+                for proj in projectileGroup:
+                    if type(proj) is FireP:
+                        projectileGroup.remove(proj)
+                projectileGroup.add(FireEndP(960, 600, player.direction, currentFlameSprite))
+                weapons[currentWeapon].flameFull = False
+                weapons[currentWeapon].flameOn = False"""
+
 
         DISPLAYSURF.fill((69, 69, 69))
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))

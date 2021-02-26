@@ -109,6 +109,9 @@ class Flamethrower(Weapon):
         self.numProj = 0
         self.fireRate = 1
 
+        self.flameOn = False
+        self.flameFull = False
+
         self.projDirection = direction
 
         super().__init__(self.sprites, posX, posY, 0, direction)
