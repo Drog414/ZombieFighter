@@ -124,12 +124,15 @@ class Player(pygame.sprite.Sprite):
 
 healthBar = pygame.image.load('Images/HealthBar.png')
 
+font = pygame.font.SysFont(None, 100)
+smallFont = pygame.font.SysFont(None, 50)
+
 #Constants
 PLAYAREA = 10000
 
 def main():
 
-    print("print")
+    menu()
 
     global zombieGroup
     zombieGroup = pygame.sprite.Group()
@@ -149,13 +152,15 @@ def main():
 
     weaponGroup = pygame.sprite.Group()
 
-    currentWeapon = 5
+    currentWeapon = 0
     weaponGroup.add(weapons[currentWeapon])
 
 
     projectileGroup = pygame.sprite.Group()
 
     fireRateCounter = 0
+
+    pygame.event.clear()
 
     while True:
 
@@ -267,6 +272,8 @@ def main():
 
         fpsClock.tick(FPS)
 
+    return True
+
 #def drawScreen():
 
 
@@ -283,5 +290,58 @@ def spawnZombie():
         direction = -1
     zombieGroup.add(Zombie(posX, 500, 0.35, 7, direction, player.playerPos))
 
+def menu():
+
+    pygame.event.clear(eventtype = KEYDOWN)
+
+    instructions = False
+
+    mode = 0
+    pos = 1
+
+    while mode == 0:
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == KEYDOWN:
+                if event.key == K_z:
+                    mode = pos
+
+                if event.key == K_UP and pos > 1:
+                    pos -= 1
+                if event.key == K_DOWN and pos < 2:
+                    pos += 1
+
+
+
+        DISPLAYSURF.fill((69, 69, 69))
+
+        img = font.render("Zombie Fighter", True, (255, 255, 255))
+        imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+        DISPLAYSURF.blit(img, imgPos)
+
+        img = smallFont.render("Play", True, (255, 255, 255))
+        imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 2)))
+        DISPLAYSURF.blit(img, imgPos)
+        if pos == 1:
+            pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+        img = smallFont.render("Controls", True, (255, 255, 255))
+        imgPos = img.get_rect(center=(int(1920 / 2),  3 * int(1080 / 4)))
+        DISPLAYSURF.blit(img, imgPos)
+        if pos == 2:
+            pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+
+
+        pygame.display.update()
+        fpsClock.tick(FPS)
+
+
+    return mode
+
 if __name__ == '__main__':
-    main()
+    replay = True
+    while replay:
+        replay = main()
