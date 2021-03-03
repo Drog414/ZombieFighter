@@ -33,12 +33,6 @@ class Projectile(pygame.sprite.Sprite):
 
         self.damage = damage
 
-    def animate(self):
-        self.isAnimating = True
-
-    def stopAnimate(self):
-        self.isAnimating
-
     def getDamage(self):
         return self.damage
 
@@ -109,6 +103,7 @@ class BulletLargeP(Projectile):
 
 class FireP(Projectile):
     def __init__(self, posX, posY, direction):
+
         self.sprites = []
         for i in range(6, 8):
             self.sprites.append(pygame.image.load('Images/Flame' + str(i) + '.png'))
@@ -141,7 +136,4 @@ class FireP(Projectile):
                 self.image = self.sprites[int(self.currentSprite)]
                 self.rect = self.image.get_rect()
                 self.rect.midleft = [int(self.posX), self.posY]
-
-
-
 

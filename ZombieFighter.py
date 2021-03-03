@@ -159,10 +159,13 @@ def main():
     projectileGroup = pygame.sprite.Group()
 
     fireRateCounter = 0
+    currentFlameSprite = 0
 
     pygame.event.clear()
 
     while True:
+
+        weapons[5].flameOn = False
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -182,6 +185,12 @@ def main():
                     spawnZombie()
 
                 if event.key == K_x:
+                    if type(weapons[currentWeapon]) is Flamethrower:
+                        for proj in projectileGroup:
+                            if type(proj) is FireP:
+                                projectileGroup.remove(proj)
+                                weapons[currentWeapon].numProj -= 1
+                                break
                     weaponGroup.remove(weapons[currentWeapon])
                     currentWeapon += 1
                     if currentWeapon >= len(weapons):
@@ -190,7 +199,14 @@ def main():
                     weapons[currentWeapon].direction = player.direction
                     fireRateCounter = 1
 
+
                 if event.key == K_LSHIFT:
+                    if type(weapons[currentWeapon]) is Flamethrower:
+                        for proj in projectileGroup:
+                            if type(proj) is FireP:
+                                projectileGroup.remove(proj)
+                                weapons[currentWeapon].numProj -= 1
+                                break
                     weaponGroup.remove(weapons[currentWeapon])
                     currentWeapon -= 1
                     if currentWeapon < 0:
@@ -198,6 +214,8 @@ def main():
                     weaponGroup.add(weapons[currentWeapon])
                     weapons[currentWeapon].direction = player.direction
                     fireRateCounter = 1
+
+
 
         if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 0:
             player.playerPos -= player.movingSpeed
@@ -210,6 +228,7 @@ def main():
                         if type(proj) is FireP:
                             projectileGroup.remove(proj)
                             projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                            weapons[currentWeapon].numProj -= 1
                             break
 
         elif pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
@@ -223,13 +242,33 @@ def main():
                         if type(proj) is FireP:
                             projectileGroup.remove(proj)
                             projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                            weapons[currentWeapon].numProj -= 1
                             break
 
-        if pygame.key.get_pressed()[pygame.K_z] and weapons[currentWeapon].hold:
-            fireRateCounter += weapons[currentWeapon].fireRate
-            if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) > 1:
-                projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
-                fireRateCounter = 0
+        if weapons[currentWeapon].hold:
+
+            if pygame.key.get_pressed()[pygame.K_z]:
+                print("z")
+                if currentWeapon != 5:
+                    fireRateCounter += weapons[currentWeapon].fireRate
+                    if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) >= 1:
+                        projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                        fireRateCounter = 0
+                else:
+                    weapons[currentWeapon].flameOn = True
+
+        if currentWeapon == 5:
+            if weapons[5].flameOn:
+                fireRateCounter += weapons[currentWeapon].fireRate
+                if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) > 1:
+                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                    fireRateCounter = 0
+            if not weapons[5].flameOn:
+                for proj in projectileGroup:
+                    if type(proj) is FireP:
+                        projectileGroup.remove(proj)
+                        weapons[currentWeapon].numProj -= 1
+
 
         DISPLAYSURF.fill((69, 69, 69))
         pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
