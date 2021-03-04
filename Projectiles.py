@@ -105,7 +105,7 @@ class FireP(Projectile):
     def __init__(self, posX, posY, direction):
 
         self.sprites = []
-        for i in range(6, 8):
+        for i in range(2):
             self.sprites.append(pygame.image.load('Images/Flame' + str(i) + '.png'))
 
         self.deleteOnImpact = False

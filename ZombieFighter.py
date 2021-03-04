@@ -108,9 +108,11 @@ class Player(pygame.sprite.Sprite):
 
         self.movingSpeed = mSpeed
 
-        self.bulletAmmo = 0
+        self.bulletSAmmo = 0
+        self.bulletLAmmo = 0
         self.knifeAmmo = 0
         self.fireAmmo = 0
+
         self.money = 0
 
     def takeDamage(self, damage):
@@ -128,7 +130,7 @@ font = pygame.font.SysFont(None, 100)
 smallFont = pygame.font.SysFont(None, 50)
 
 #Constants
-PLAYAREA = 10000
+PLAYAREA = 6000
 
 def main():
 
@@ -293,7 +295,7 @@ def main():
             if proj.posX + player.playerPos > PLAYAREA + 1000 or proj.posX + player.playerPos < -100:
                 projectileGroup.remove(proj)
 
-        dispHealth()
+        dispStats()
 
         projectileGroup.draw(DISPLAYSURF)
         playerGroup.draw(DISPLAYSURF)
@@ -316,10 +318,14 @@ def main():
 #def drawScreen():
 
 
-def dispHealth():
+def dispStats():
     DISPLAYSURF.blit(healthBar, (10, 0))
     pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(player.health * 13), 70))
     pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1500, 0, 420, 150))
+    img = smallFont.render("Ammo", True, (255, 255, 255))
+    imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+    DISPLAYSURF.blit(img, imgPos)
+
 
 def spawnZombie():
     posX = randint(0, PLAYAREA)
@@ -337,6 +343,7 @@ def menu():
 
     mode = 0
     pos = 1
+    showControls = False
 
     while mode == 0:
 
@@ -347,7 +354,13 @@ def menu():
 
             if event.type == KEYDOWN:
                 if event.key == K_z:
-                    mode = pos
+                    if not showControls:
+                        if pos == 1:
+                            mode = 1
+                        else:
+                            showControls = True
+                    else:
+                        showControls = False
 
                 if event.key == K_UP and pos > 1:
                     pos -= 1
@@ -357,28 +370,47 @@ def menu():
 
 
         DISPLAYSURF.fill((69, 69, 69))
+        if not showControls:
+            img = font.render("Zombie Fighter", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+            DISPLAYSURF.blit(img, imgPos)
+    
+            img = smallFont.render("Play", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 2)))
+            DISPLAYSURF.blit(img, imgPos)
+            if pos == 1:
+                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+            img = smallFont.render("Controls", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2),  3 * int(1080 / 4)))
+            DISPLAYSURF.blit(img, imgPos)
+            if pos == 2:
+                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+        else:
+            img = smallFont.render(" - Controls - ", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+            DISPLAYSURF.blit(img, imgPos)
+            img = smallFont.render("Use the arrow keys to move", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + int(1080 * 0.05)))
+            DISPLAYSURF.blit(img, imgPos)
+            img = smallFont.render("Press Z to fire your weapon", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + 2 * int(1080 * 0.05)))
+            DISPLAYSURF.blit(img, imgPos)
+            img = smallFont.render("Press Shift and X to change weapons", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + 3 * int(1080 * 0.05)))
+            DISPLAYSURF.blit(img, imgPos)
+            img = smallFont.render("Press Escape to quit", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + 4 * int(1080 * 0.05)))
+            DISPLAYSURF.blit(img, imgPos)
 
-        img = font.render("Zombie Fighter", True, (255, 255, 255))
-        imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
-        DISPLAYSURF.blit(img, imgPos)
-
-        img = smallFont.render("Play", True, (255, 255, 255))
-        imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 2)))
-        DISPLAYSURF.blit(img, imgPos)
-        if pos == 1:
-            pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
-        img = smallFont.render("Controls", True, (255, 255, 255))
-        imgPos = img.get_rect(center=(int(1920 / 2),  3 * int(1080 / 4)))
-        DISPLAYSURF.blit(img, imgPos)
-        if pos == 2:
-            pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+            img = smallFont.render("Press Z to return to the title screen", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + 3 * int(1080 * 0.05) + 11 * int(1080 * 0.05)))
+            DISPLAYSURF.blit(img, imgPos)
 
 
         pygame.display.update()
         fpsClock.tick(FPS)
 
 
-    return mode
 
 if __name__ == '__main__':
     replay = True
