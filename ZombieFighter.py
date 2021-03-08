@@ -118,10 +118,6 @@ class Player(pygame.sprite.Sprite):
     def takeDamage(self, damage):
         self.health -= damage + int(self.armor * damage)
 
-    #Might not be necessary?
-    def switchDirection(self):
-        self.direction *= -1
-
     #def upgrade(self):
 
 healthBar = pygame.image.load('Images/HealthBar.png')
@@ -146,14 +142,14 @@ def main():
 
     weapons = []
     weapons.append(Pistol(960, 600, player.direction))
-    weapons.append(Knife(960, 600, player.direction))
-    weapons.append(Chainsaw(960, 600, player.direction))
     weapons.append(Skorpian(960, 600, player.direction))
     weapons.append(AssaultRifle(960, 600, player.direction))
+    weapons.append(Knife(960, 600, player.direction))
     weapons.append(Flamethrower(960, 600, player.direction))
 
     weaponGroup = pygame.sprite.Group()
 
+    global currentWeapon
     currentWeapon = 0
     weaponGroup.add(weapons[currentWeapon])
 
@@ -161,13 +157,12 @@ def main():
     projectileGroup = pygame.sprite.Group()
 
     fireRateCounter = 0
-    currentFlameSprite = 0
 
     pygame.event.clear()
 
     while True:
 
-        weapons[5].flameOn = False
+        weapons[4].flameOn = False
 
         for event in pygame.event.get():
             if event.type == QUIT:
@@ -251,7 +246,7 @@ def main():
 
             if pygame.key.get_pressed()[pygame.K_z]:
                 print("z")
-                if currentWeapon != 5:
+                if currentWeapon != 4:
                     fireRateCounter += weapons[currentWeapon].fireRate
                     if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) >= 1:
                         projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
@@ -259,13 +254,13 @@ def main():
                 else:
                     weapons[currentWeapon].flameOn = True
 
-        if currentWeapon == 5:
-            if weapons[5].flameOn:
+        if currentWeapon == 4:
+            if weapons[4].flameOn:
                 fireRateCounter += weapons[currentWeapon].fireRate
                 if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) > 1:
                     projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                     fireRateCounter = 0
-            if not weapons[5].flameOn:
+            if not weapons[4].flameOn:
                 for proj in projectileGroup:
                     if type(proj) is FireP:
                         projectileGroup.remove(proj)
@@ -322,9 +317,16 @@ def dispStats():
     DISPLAYSURF.blit(healthBar, (10, 0))
     pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(player.health * 13), 70))
     pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1500, 0, 420, 150))
-    img = smallFont.render("Ammo", True, (255, 255, 255))
-    imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
-    DISPLAYSURF.blit(img, imgPos)
+    pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (1500, 0, 50, 50))
+    if currentWeapon == 0 or currentWeapon == 1:
+        img = smallFont.render(str(player.bulletSAmmo), True, (255, 255, 255))
+    elif currentWeapon == 2:
+        img = smallFont.render(str(player.bulletSAmmo), True, (255, 255, 255))
+    elif currentWeapon == 3:
+        img = smallFont.render(str(player.bulletSAmmo), True, (255, 255, 255))
+    elif currentWeapon == 4:
+        img = smallFont.render(str(player.bulletSAmmo), True, (255, 255, 255))
+    DISPLAYSURF.blit(img, (1550, 10))
 
 
 def spawnZombie():
@@ -411,6 +413,62 @@ def menu():
         fpsClock.tick(FPS)
 
 
+def shop():
+    pygame.event.clear(eventtype=KEYDOWN)
+
+    #shopArea codes
+    #0 - main shop menu
+    #1 - weapon purchase menu
+    #2 - ammo purchase menu
+    #3 - upgrades and health menu
+
+    start = False
+
+    shopArea = 0
+    pos = 1
+
+    while not start:
+
+        for event in pygame.event.get():
+            if event.type == QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type == KEYDOWN:
+                if event.key == K_z:
+                    if shopArea == 0:
+                        shopArea = pos
+
+
+                if event.key == K_UP and pos > 1:
+                    pos -= 1
+                if event.key == K_DOWN and pos < 2:
+                    pos += 1
+
+        DISPLAYSURF.fill((69, 69, 69))
+        if shopArea == 0:
+            img = font.render("- Shop - ", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+            DISPLAYSURF.blit(img, imgPos)
+            img = smallFont.render("Weapons", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 2)))
+            DISPLAYSURF.blit(img, imgPos)
+            if pos == 1:
+                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+            img = smallFont.render("Ammo", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            DISPLAYSURF.blit(img, imgPos)
+            if pos == 2:
+                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+            img = smallFont.render("Upgrades & Health", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            DISPLAYSURF.blit(img, imgPos)
+            if pos == 3:
+                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+
+
+        pygame.display.update()
+        fpsClock.tick(FPS)
 
 if __name__ == '__main__':
     replay = True
