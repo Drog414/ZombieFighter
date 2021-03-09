@@ -145,7 +145,7 @@ class AssaultRifle(Weapon):
         self.hold = True
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
         self.numProj = 0
-        self.fireRate = 0.25
+        self.fireRate = 0.2
 
         self.switchProjDir = False
 

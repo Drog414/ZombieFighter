@@ -53,6 +53,8 @@ class Zombie(pygame.sprite.Sprite):
         self.health = 100
         self.damage = 0.25
 
+        self.moneyUponDeath = int(randint(5, 10) / 10 * self.health)
+
     def switchDirection(self):
         self.direction *= -1
 
@@ -61,6 +63,9 @@ class Zombie(pygame.sprite.Sprite):
 
     def dealDamage(self):
         return self.damage
+
+    def getMoney(self):
+        return self.moneyUponDeath
 
     def update(self):
         if self.isAnimating:
@@ -108,19 +113,34 @@ class Player(pygame.sprite.Sprite):
 
         self.movingSpeed = mSpeed
 
-        self.bulletSAmmo = 0
+        self.bulletSAmmo = 10
         self.bulletLAmmo = 0
         self.knifeAmmo = 0
         self.fireAmmo = 0
 
+        self.hasWeapon = []
+        self.hasWeapon.append(True)
+        self.hasWeapon.append(False)
+        self.hasWeapon.append(False)
+        self.hasWeapon.append(False)
+        self.hasWeapon.append(False)
+
+
         self.money = 0
+        self.moneyUpgrade = 0
 
     def takeDamage(self, damage):
         self.health -= damage + int(self.armor * damage)
 
+    def addMoney(self, money):
+        self.money += money + int(money * self.moneyUpgrade)
+
     #def upgrade(self):
 
 healthBar = pygame.image.load('Images/HealthBar.png')
+armor = pygame.image.load('Images/Armor.png')
+ammoBox = pygame.image.load('Images/AmmoBox.png')
+money = pygame.image.load('Images/Money.png')
 
 font = pygame.font.SysFont(None, 100)
 smallFont = pygame.font.SysFont(None, 50)
@@ -167,6 +187,7 @@ def main():
         shop()
 
         inLevel = True
+        pauseState = False
 
         #main game loop
         while not lose and inLevel:
@@ -183,137 +204,171 @@ def main():
                         pygame.quit()
                         sys.exit()
 
-                    if event.key == K_z and not weapons[currentWeapon].hold:
-                        if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj:
-                            projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                    if event.key == K_p:
+                        if not pauseState:
+                            pauseState = True
+                        else:
+                            pauseState = False
 
-                    if event.key == K_SPACE:
-                        spawnZombie(player.playerPos)
+                    if not pauseState:
+                        if event.key == K_z and not weapons[currentWeapon].hold:
+                            if currentWeapon == 0 and player.bulletSAmmo > 0:
+                                if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj:
+                                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                                    player.bulletSAmmo -= 1
 
-                    if event.key == K_x:
-                        if type(weapons[currentWeapon]) is Flamethrower:
+                            elif currentWeapon == 3 and player.knifeAmmo > 0:
+                                if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj:
+                                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                                    player.bulletSAmmo -= 1
+
+
+                        if event.key == K_SPACE:
+                            spawnZombie(player.playerPos)
+
+                        if event.key == K_x:
+                            if type(weapons[currentWeapon]) is Flamethrower:
+                                for proj in projectileGroup:
+                                    if type(proj) is FireP:
+                                        projectileGroup.remove(proj)
+                                        weapons[currentWeapon].numProj -= 1
+                                        break
+                            weaponGroup.remove(weapons[currentWeapon])
+                            currentWeapon += 1
+                            while True:
+                                if not player.hasWeapon[currentWeapon]:
+                                    currentWeapon += 1
+                                    if currentWeapon >= len(weapons):
+                                        currentWeapon = 0
+                                else:
+                                    break
+                            if currentWeapon >= len(weapons):
+                                currentWeapon = 0
+                            weaponGroup.add(weapons[currentWeapon])
+                            weapons[currentWeapon].direction = player.direction
+                            fireRateCounter = 1
+
+
+                        if event.key == K_LSHIFT:
+                            if type(weapons[currentWeapon]) is Flamethrower:
+                                for proj in projectileGroup:
+                                    if type(proj) is FireP:
+                                        projectileGroup.remove(proj)
+                                        weapons[currentWeapon].numProj -= 1
+                                        break
+                            weaponGroup.remove(weapons[currentWeapon])
+                            currentWeapon -= 1
+                            while True:
+                                if not player.hasWeapon[currentWeapon]:
+                                    currentWeapon -= 1
+                                    if currentWeapon < 0:
+                                        currentWeapon = len(weapons) - 1
+                                else:
+                                    break
+                            if currentWeapon < 0:
+                                currentWeapon = len(weapons) - 1
+                            weaponGroup.add(weapons[currentWeapon])
+                            weapons[currentWeapon].direction = player.direction
+                            fireRateCounter = 1
+
+
+            if not pauseState:
+                if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 0:
+                    player.playerPos -= player.movingSpeed
+                    player.direction = -1
+                    weapons[currentWeapon].direction = -1
+                    if type(weapons[currentWeapon]) is Flamethrower:
+                        if weapons[currentWeapon].projDirection == 1:
+                            weapons[currentWeapon].projDirection = -1
                             for proj in projectileGroup:
                                 if type(proj) is FireP:
                                     projectileGroup.remove(proj)
+                                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                                     weapons[currentWeapon].numProj -= 1
                                     break
-                        weaponGroup.remove(weapons[currentWeapon])
-                        currentWeapon += 1
-                        if currentWeapon >= len(weapons):
-                            currentWeapon = 0
-                        weaponGroup.add(weapons[currentWeapon])
-                        weapons[currentWeapon].direction = player.direction
-                        fireRateCounter = 1
 
-
-                    if event.key == K_LSHIFT:
-                        if type(weapons[currentWeapon]) is Flamethrower:
+                elif pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
+                    player.playerPos += player.movingSpeed
+                    player.direction = 1
+                    weapons[currentWeapon].direction = 1
+                    if type(weapons[currentWeapon]) is Flamethrower:
+                        if weapons[currentWeapon].projDirection == -1:
+                            weapons[currentWeapon].projDirection = 1
                             for proj in projectileGroup:
                                 if type(proj) is FireP:
                                     projectileGroup.remove(proj)
+                                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                                     weapons[currentWeapon].numProj -= 1
                                     break
-                        weaponGroup.remove(weapons[currentWeapon])
-                        currentWeapon -= 1
-                        if currentWeapon < 0:
-                            currentWeapon = len(weapons) - 1
-                        weaponGroup.add(weapons[currentWeapon])
-                        weapons[currentWeapon].direction = player.direction
-                        fireRateCounter = 1
 
+                if weapons[currentWeapon].hold:
 
-
-            if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 0:
-                player.playerPos -= player.movingSpeed
-                player.direction = -1
-                weapons[currentWeapon].direction = -1
-                if type(weapons[currentWeapon]) is Flamethrower:
-                    if weapons[currentWeapon].projDirection == 1:
-                        weapons[currentWeapon].projDirection = -1
-                        for proj in projectileGroup:
-                            if type(proj) is FireP:
-                                projectileGroup.remove(proj)
+                    if pygame.key.get_pressed()[pygame.K_z]:
+                        if currentWeapon != 4:
+                            fireRateCounter += weapons[currentWeapon].fireRate
+                            if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) >= 1:
                                 projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
-                                weapons[currentWeapon].numProj -= 1
-                                break
+                                fireRateCounter = 0
+                        else:
+                            weapons[currentWeapon].flameOn = True
 
-            elif pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
-                player.playerPos += player.movingSpeed
-                player.direction = 1
-                weapons[currentWeapon].direction = 1
-                if type(weapons[currentWeapon]) is Flamethrower:
-                    if weapons[currentWeapon].projDirection == -1:
-                        weapons[currentWeapon].projDirection = 1
-                        for proj in projectileGroup:
-                            if type(proj) is FireP:
-                                projectileGroup.remove(proj)
-                                projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
-                                weapons[currentWeapon].numProj -= 1
-                                break
-
-            if weapons[currentWeapon].hold:
-
-                if pygame.key.get_pressed()[pygame.K_z]:
-                    if currentWeapon != 4:
+                if currentWeapon == 4:
+                    if weapons[4].flameOn:
                         fireRateCounter += weapons[currentWeapon].fireRate
-                        if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) >= 1:
+                        if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) > 1:
                             projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                             fireRateCounter = 0
-                    else:
-                        weapons[currentWeapon].flameOn = True
-
-            if currentWeapon == 4:
-                if weapons[4].flameOn:
-                    fireRateCounter += weapons[currentWeapon].fireRate
-                    if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) > 1:
-                        projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
-                        fireRateCounter = 0
-                if not weapons[4].flameOn:
-                    for proj in projectileGroup:
-                        if type(proj) is FireP:
-                            projectileGroup.remove(proj)
-                            weapons[currentWeapon].numProj -= 1
-
-
-            DISPLAYSURF.fill((69, 69, 69))
-            pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
-            pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 600, 10, 200))
-            pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1050 - player.playerPos + PLAYAREA, 600, 10, 200))
-
-            for zombie in zombieGroup:
-                if pygame.sprite.spritecollide(zombie, projectileGroup, False):
-                    for proj in projectileGroup:
-                        if pygame.sprite.spritecollide(proj, zombieGroup, False):
-                            zombie.takeDamage(proj.getDamage())
-                            if proj.deleteOnImpact:
+                    if not weapons[4].flameOn:
+                        for proj in projectileGroup:
+                            if type(proj) is FireP:
                                 projectileGroup.remove(proj)
                                 weapons[currentWeapon].numProj -= 1
-                            if zombie.health <= 0:
-                                zombieGroup.remove(zombie)
-
-                if pygame.sprite.spritecollide(zombie, playerGroup, False):
-                    player.takeDamage(zombie.dealDamage())
-
-            for proj in projectileGroup:
-                if proj.posX + player.playerPos > PLAYAREA + 1000 or proj.posX + player.playerPos < -100:
-                    projectileGroup.remove(proj)
-
-            dispStats()
-
-            if player.health <= 0:
-                lose = True
-
-            projectileGroup.draw(DISPLAYSURF)
-            playerGroup.draw(DISPLAYSURF)
-            weaponGroup.draw(DISPLAYSURF)
-            zombieGroup.draw(DISPLAYSURF)
 
 
-            playerGroup.update()
-            weaponGroup.update()
-            zombieGroup.update()
-            projectileGroup.update(player.playerPos)
+                DISPLAYSURF.fill((69, 69, 69))
+                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
+                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 600, 10, 200))
+                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1050 - player.playerPos + PLAYAREA, 600, 10, 200))
 
+                for zombie in zombieGroup:
+                    if pygame.sprite.spritecollide(zombie, projectileGroup, False):
+                        for proj in projectileGroup:
+                            if pygame.sprite.spritecollide(proj, zombieGroup, False):
+                                zombie.takeDamage(proj.getDamage())
+                                if proj.deleteOnImpact:
+                                    projectileGroup.remove(proj)
+                                    weapons[currentWeapon].numProj -= 1
+                                if zombie.health <= 0:
+                                    player.addMoney(zombie.getMoney())
+                                    print(player.money)
+                                    zombieGroup.remove(zombie)
+
+                    if pygame.sprite.spritecollide(zombie, playerGroup, False):
+                        player.takeDamage(zombie.dealDamage())
+
+                for proj in projectileGroup:
+                    if proj.posX + player.playerPos > PLAYAREA + 1000 or proj.posX + player.playerPos < -100:
+                        projectileGroup.remove(proj)
+
+                dispStats()
+
+                if player.health <= 0:
+                    lose = True
+
+                projectileGroup.draw(DISPLAYSURF)
+                playerGroup.draw(DISPLAYSURF)
+                weaponGroup.draw(DISPLAYSURF)
+                zombieGroup.draw(DISPLAYSURF)
+
+
+                playerGroup.update()
+                weaponGroup.update()
+                zombieGroup.update()
+                projectileGroup.update(player.playerPos)
+            else:
+                img = font.render("PAUSED", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 3)))
+                DISPLAYSURF.blit(img, imgPos)
 
             pygame.display.update()
 
@@ -321,23 +376,33 @@ def main():
 
         return True
 
-#def drawScreen():
-
 
 def dispStats():
     DISPLAYSURF.blit(healthBar, (10, 0))
     pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (170, 40, int(player.health * 13), 70))
     pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1500, 0, 420, 150))
-    pygame.draw.rect(DISPLAYSURF, (255, 0, 0), (1500, 0, 50, 50))
+    DISPLAYSURF.blit(armor, (1508, 0))
+    DISPLAYSURF.blit(ammoBox, (1648, 25))
+    DISPLAYSURF.blit(money, (1788, 6))
+
+    img = smallFont.render(str(player.armor), True, (255, 255, 255))
+    imgPos = img.get_rect(center=(1570, 130))
+    DISPLAYSURF.blit(img, imgPos)
+
     if currentWeapon == 0 or currentWeapon == 1:
         img = smallFont.render(str(player.bulletSAmmo), True, (255, 255, 255))
     elif currentWeapon == 2:
-        img = smallFont.render(str(player.bulletSAmmo), True, (255, 255, 255))
+        img = smallFont.render(str(player.bulletLAmmo), True, (255, 255, 255))
     elif currentWeapon == 3:
-        img = smallFont.render(str(player.bulletSAmmo), True, (255, 255, 255))
+        img = smallFont.render(str(player.knifeAmmo), True, (255, 255, 255))
     elif currentWeapon == 4:
-        img = smallFont.render(str(player.bulletSAmmo), True, (255, 255, 255))
-    DISPLAYSURF.blit(img, (1550, 10))
+        img = smallFont.render(str(player.fireAmmo), True, (255, 255, 255))
+    imgPos = img.get_rect(center=(1710, 130))
+    DISPLAYSURF.blit(img, imgPos)
+
+    img = smallFont.render("$" + str(player.money), True, (255, 255, 255))
+    imgPos = img.get_rect(center=(1850, 130))
+    DISPLAYSURF.blit(img, imgPos)
 
 
 def spawnZombie(playerPos):
@@ -422,8 +487,11 @@ def menu():
             img = smallFont.render("Press Shift and X to change weapons", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + 3 * int(1080 * 0.05)))
             DISPLAYSURF.blit(img, imgPos)
-            img = smallFont.render("Press Escape to quit", True, (255, 255, 255))
+            img = smallFont.render("Press P to pause", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + 4 * int(1080 * 0.05)))
+            DISPLAYSURF.blit(img, imgPos)
+            img = smallFont.render("Press Escape to quit", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + 5 * int(1080 * 0.05)))
             DISPLAYSURF.blit(img, imgPos)
 
             img = smallFont.render("Press Z to return to the title screen", True, (255, 255, 255))
@@ -449,6 +517,8 @@ def shop():
     shopArea = 0
     pos = 1
 
+    maxPos = 4
+
     while not start:
 
         for event in pygame.event.get():
@@ -464,124 +534,146 @@ def shop():
                 if event.key == K_z:
                     if shopArea == 0:
                         shopArea = pos
+                        pos = 1
+                    else:
+                        if pos == maxPos:
+                            shopArea = 0
+                            pos = 1
+                        elif shopArea == 1:
+                            #buy Skorpian
+                            if pos == 1 and not player.hasSkorpian and player.money >= 500:
+                                player.hasSkorpian = True
+                                player.money -= 500
+                            #buy assault Rifle
+                            if pos == 2 and not player.hasAssaultRifle and player.money >= 1000:
+                                player.hasSkorpian = True
+                                player.money -= 1000
+
 
 
                 if event.key == K_UP and pos > 1:
                     pos -= 1
-                if event.key == K_DOWN and pos < 2:
+                if event.key == K_DOWN and pos < maxPos:
                     pos += 1
 
         DISPLAYSURF.fill((69, 69, 69))
         if shopArea == 0:
+            maxPos = 4
             img = font.render("- Shop - ", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Weapons", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 2)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 2 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 1:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Ammo", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 2:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Upgrades & Health", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 4 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 3:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Play", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 4:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
 
 
         elif shopArea == 1:
+            maxPos = 5
             img = font.render("- Weapons - ", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Skorpian", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 2)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 2 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 1:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("M16", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 2.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 2:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Knife", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 3:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Flamethrower", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 4:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Back", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 4 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 5:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
 
         elif shopArea == 2:
+            maxPos = 5
             img = font.render("- Ammo - ", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Small Bullets", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 2)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 2 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 1:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Large Bullets", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 2.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 2:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Knife", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 3:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Flamethrower Gas", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 4:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Back", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 4 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 5:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
 
         elif shopArea == 3:
+            maxPos = 4
             img = font.render("- Upgrades & Health - ", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Armor", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 2)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 2 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 1:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Health", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 2.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 2:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Money Upgrade", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 3:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
             img = smallFont.render("Back", True, (255, 255, 255))
-            imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 4)))
+            imgPos = img.get_rect(center=(int(1920 / 2), 3.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 4:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+
+        elif shopArea == 4:
+            start = True
 
 
         pygame.display.update()
