@@ -118,7 +118,7 @@ class Flamethrower(Weapon):
 
     def getProj(self, direction):
         self.numProj += 1
-        return FireP(960, 600, direction)
+        return FireP(960 + (75 * direction), 570, direction)
 
 class Skorpian(Weapon):
     def __init__(self, posX, posY, direction):
@@ -140,7 +140,7 @@ class Skorpian(Weapon):
 class AssaultRifle(Weapon):
     def __init__(self, posX, posY, direction):
         self.sprites = []
-        self.sprites.append(pygame.image.load('Images/AssaultRifle.png'))
+        self.sprites.append(pygame.image.load('Images/AssaultRifle1.png'))
 
         self.hold = True
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
