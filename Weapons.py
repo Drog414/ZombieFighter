@@ -47,18 +47,6 @@ class Weapon(pygame.sprite.Sprite):
         else:
             self.image = self.sprites[int(self.currentSprite)]
 
-
-class Chainsaw(Weapon):
-
-    def __init__(self, posX, posY, direction):
-        self.sprites = []
-        self.sprites.append(pygame.image.load('Images/Chainsaw1.png'))
-        self.sprites.append(pygame.image.load('Images/Chainsaw2.png'))
-
-        self.hold = True
-
-        super().__init__(self.sprites, posX, posY, 0.35, direction)
-
 class Knife(Weapon):
     def __init__(self, posX, posY, direction):
         self.sprites = []
@@ -128,7 +116,7 @@ class Skorpian(Weapon):
         self.hold = True
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
         self.numProj = 0
-        self.fireRate = 0.15
+        self.fireRate = 0.10
 
         self.switchProjDir = False
 
@@ -145,7 +133,7 @@ class AssaultRifle(Weapon):
         self.hold = True
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
         self.numProj = 0
-        self.fireRate = 0.2
+        self.fireRate = 0.20
 
         self.switchProjDir = False
 

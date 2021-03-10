@@ -113,7 +113,7 @@ class Player(pygame.sprite.Sprite):
 
         self.movingSpeed = mSpeed
 
-        self.bulletSAmmo = 10
+        self.bulletSAmmo = 50000
         self.bulletLAmmo = 0
         self.knifeAmmo = 0
         self.fireAmmo = 0
@@ -177,20 +177,27 @@ def main():
     projectileGroup = pygame.sprite.Group()
 
     fireRateCounter = 0
+
+    global lose
     lose = False
 
-    pygame.event.clear()
+    pygame.event.clear(eventtype = KEYDOWN)
 
     while not lose:
-        pygame.event.clear()
+        pygame.event.clear(eventtype=KEYDOWN)
+
+        zombieGroup.empty()
+        projectileGroup.empty()
 
         shop()
 
         inLevel = True
         pauseState = False
 
+        zombiesKilled = 0
+
         #main game loop
-        while not lose and inLevel:
+        while inLevel:
 
             weapons[4].flameOn = False
 
@@ -306,11 +313,19 @@ def main():
                     if pygame.key.get_pressed()[pygame.K_z]:
                         if currentWeapon != 4:
                             fireRateCounter += weapons[currentWeapon].fireRate
-                            if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) >= 1:
-                                projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
-                                fireRateCounter = 0
+                            if currentWeapon == 2 and player.bulletLAmmo > 0:
+                                if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) >= 1:
+                                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                                    fireRateCounter = 0
+                                    player.bulletLAmmo -= 1
+                            elif currentWeapon == 1 and player.bulletSAmmo > 0:
+                                if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj and int(fireRateCounter) >= 1:
+                                    projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
+                                    fireRateCounter = 0
+                                    player.bulletSAmmo -= 1
                         else:
-                            weapons[currentWeapon].flameOn = True
+                            if player.fireAmmo > 0:
+                                weapons[currentWeapon].flameOn = True
 
                 if currentWeapon == 4:
                     if weapons[4].flameOn:
@@ -342,6 +357,7 @@ def main():
                                     player.addMoney(zombie.getMoney())
                                     print(player.money)
                                     zombieGroup.remove(zombie)
+                                    zombiesKilled += 1
 
                     if pygame.sprite.spritecollide(zombie, playerGroup, False):
                         player.takeDamage(zombie.dealDamage())
@@ -354,6 +370,7 @@ def main():
 
                 if player.health <= 0:
                     lose = True
+                    inLevel = False
 
                 projectileGroup.draw(DISPLAYSURF)
                 playerGroup.draw(DISPLAYSURF)
@@ -370,11 +387,14 @@ def main():
                 imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 3)))
                 DISPLAYSURF.blit(img, imgPos)
 
+            if zombiesKilled > 5:
+                inLevel = False
+
             pygame.display.update()
 
             fpsClock.tick(FPS)
 
-        return True
+    return True
 
 
 def dispStats():
@@ -541,13 +561,21 @@ def shop():
                             pos = 1
                         elif shopArea == 1:
                             #buy Skorpian
-                            if pos == 1 and not player.hasSkorpian and player.money >= 500:
-                                player.hasSkorpian = True
+                            if pos == 1 and not player.hasWeapon[1] and player.money >= 500:
+                                player.hasWeapon[1] = True
                                 player.money -= 500
                             #buy assault Rifle
-                            if pos == 2 and not player.hasAssaultRifle and player.money >= 1000:
-                                player.hasSkorpian = True
+                            if pos == 2 and not player.hasWeapon[2] and player.money >= 1000:
+                                player.hasWeapon[2] = True
                                 player.money -= 1000
+                            #buy Knife
+                            if pos == 3 and not player.hasWeapon[3] and player.money >= 10000:
+                                player.hasWeapon[3] = True
+                                player.money -= 10000
+                            #buy Flamethrower
+                            if pos == 3 and not player.hasWeapon[4] and player.money >= 5000:
+                                player.hasWeapon[4] = True
+                                player.money -= 5000
 
 
 
