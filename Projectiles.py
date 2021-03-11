@@ -70,7 +70,7 @@ class KnifeP(Projectile):
 
         self.deleteOnImpact = True
 
-        super().__init__(self.sprites, posX, posY, 0.4, 20, direction, 50)
+        super().__init__(self.sprites, posX, posY, 0.4, 20, direction, 200)
 
 class ExplosionP(Projectile):
     def __init__(self, posX, posY, direction):
@@ -99,7 +99,7 @@ class BulletLargeP(Projectile):
 
         self.deleteOnImpact = True
 
-        super().__init__(self.sprites, posX, posY, 0.4, 25, direction, 25)
+        super().__init__(self.sprites, posX, posY, 0.4, 25, direction, 30)
 
 class FireP(Projectile):
     def __init__(self, posX, posY, direction):

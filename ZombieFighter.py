@@ -18,7 +18,7 @@ pygame.display.set_caption("Zombie Fighter")
 
 class Zombie(pygame.sprite.Sprite):
 
-    def __init__(self, posX, posY, aSpeed, mSpeed, direction, playerPos):
+    def __init__(self, posX, posY, aSpeed, mSpeed, direction, playerPos, health, damage):
         super().__init__()
 
         self.sprites = []
@@ -50,10 +50,10 @@ class Zombie(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.midtop = [posX - playerPos, posY]
 
-        self.health = 100
-        self.damage = 0.25
+        self.health = health
+        self.damage = damage
 
-        self.moneyUponDeath = int(randint(5, 10) / 10 * self.health)
+        self.moneyUponDeath = int(randint(7, 13) / 10 * self.health)
 
     def switchDirection(self):
         self.direction *= -1
@@ -66,6 +66,25 @@ class Zombie(pygame.sprite.Sprite):
 
     def getMoney(self):
         return self.moneyUponDeath
+
+    def setSpawn(self, playerPos):
+        posX = randint(0, PLAYAREA)
+        spawn = False
+        while not spawn:
+            posX = randint(0, PLAYAREA)
+            if 100 < player.playerPos < PLAYAREA - 100:
+                if not (player.playerPos - 500 < posX < player.playerPos + 500):
+                    spawn = True
+            else:
+                spawn = True
+
+        if posX < playerPos:
+            self.direction = 1
+        else:
+            self.direction = -1
+
+        self.posX = posX
+        self.rect.midtop = [posX - playerPos, self.posY]
 
     def update(self):
         if self.isAnimating:
@@ -126,7 +145,7 @@ class Player(pygame.sprite.Sprite):
         self.hasWeapon.append(False)
 
 
-        self.money = 0
+        self.money = 1000000
         self.moneyUpgrade = 0
 
     def takeDamage(self, damage):
@@ -181,9 +200,24 @@ def main():
     global lose
     lose = False
 
+    waveNum = 0
+
     pygame.event.clear(eventtype = KEYDOWN)
 
     while not lose:
+
+        waveNum += 1
+
+        waitTime = int(pygame.time.get_ticks() / 1000) + 2
+        while waitTime > int(pygame.time.get_ticks() / 1000):
+            DISPLAYSURF.fill((69, 69, 69))
+            img = font.render("Wave " + str(waveNum), True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4)))
+            DISPLAYSURF.blit(img, imgPos)
+
+            pygame.display.update()
+
+
         pygame.event.clear(eventtype=KEYDOWN)
 
         zombieGroup.empty()
@@ -195,6 +229,9 @@ def main():
         pauseState = False
 
         zombiesKilled = 0
+        zombiesSpawned = 0
+
+        zombieList = setWave(waveNum)
 
         #main game loop
         while inLevel:
@@ -227,11 +264,13 @@ def main():
                             elif currentWeapon == 3 and player.knifeAmmo > 0:
                                 if weapons[currentWeapon].numProj < weapons[currentWeapon].maxProj:
                                     projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
-                                    player.bulletSAmmo -= 1
+                                    player.knifeAmmo -= 1
 
 
-                        if event.key == K_SPACE:
-                            spawnZombie(player.playerPos)
+                        if event.key == K_SPACE and zombiesSpawned < len(zombieList):
+                            zombieList[zombiesSpawned].setSpawn(player.playerPos)
+                            zombieGroup.add(zombieList[zombiesSpawned])
+                            zombiesSpawned += 1
 
                         if event.key == K_x:
                             if type(weapons[currentWeapon]) is Flamethrower:
@@ -326,6 +365,7 @@ def main():
                         else:
                             if player.fireAmmo > 0:
                                 weapons[currentWeapon].flameOn = True
+                                player.fireAmmo -= 0.05
 
                 if currentWeapon == 4:
                     if weapons[4].flameOn:
@@ -355,7 +395,6 @@ def main():
                                     weapons[currentWeapon].numProj -= 1
                                 if zombie.health <= 0:
                                     player.addMoney(zombie.getMoney())
-                                    print(player.money)
                                     zombieGroup.remove(zombie)
                                     zombiesKilled += 1
 
@@ -387,12 +426,23 @@ def main():
                 imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 3)))
                 DISPLAYSURF.blit(img, imgPos)
 
-            if zombiesKilled > 5:
+            if zombiesKilled >= len(zombieList):
                 inLevel = False
 
             pygame.display.update()
 
             fpsClock.tick(FPS)
+
+        waitTime = int(pygame.time.get_ticks() / 1000) + 2
+        while waitTime > int(pygame.time.get_ticks() / 1000):
+            if not lose:
+                img = font.render("You Survived!", True, (255, 255, 255))
+            else:
+                img = font.render("You Died!", True, (255, 255, 255))
+            imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 3)))
+            DISPLAYSURF.blit(img, imgPos)
+
+            pygame.display.update()
 
     return True
 
@@ -405,7 +455,7 @@ def dispStats():
     DISPLAYSURF.blit(ammoBox, (1648, 25))
     DISPLAYSURF.blit(money, (1788, 6))
 
-    img = smallFont.render(str(player.armor), True, (255, 255, 255))
+    img = smallFont.render(str(int(player.armor * 2 * 100)) + "%", True, (255, 255, 255))
     imgPos = img.get_rect(center=(1570, 130))
     DISPLAYSURF.blit(img, imgPos)
 
@@ -416,7 +466,7 @@ def dispStats():
     elif currentWeapon == 3:
         img = smallFont.render(str(player.knifeAmmo), True, (255, 255, 255))
     elif currentWeapon == 4:
-        img = smallFont.render(str(player.fireAmmo), True, (255, 255, 255))
+        img = smallFont.render(str(int(player.fireAmmo)), True, (255, 255, 255))
     imgPos = img.get_rect(center=(1710, 130))
     DISPLAYSURF.blit(img, imgPos)
 
@@ -425,22 +475,28 @@ def dispStats():
     DISPLAYSURF.blit(img, imgPos)
 
 
-def spawnZombie(playerPos):
+def setWave(waveNum):
 
-    spawn = False
-    while not spawn:
-        posX = randint(0, PLAYAREA)
-        if playerPos > 100 and playerPos < PLAYAREA - 100:
-            if not (playerPos - 500 < posX < playerPos + 500):
-                spawn = True
-        else:
-            spawn = True
+    zombieList = []
 
-    if posX < playerPos:
-        direction = 1
-    else:
-        direction = -1
-    zombieGroup.add(Zombie(posX + 960, 500, 0.35, 7, direction, playerPos))
+    #Determine the number of zombies
+    multiplier = 2.5 + (.25 * int(waveNum / 4))
+    numZombies = int(multiplier * waveNum) + 3
+
+    #Set other zombie attributes
+    # - Health
+    # - Damage
+    # - Speed
+
+    for i in range(numZombies):
+        health = 100 + 5 * (waveNum - 1)
+        damage = 0.25 + (randint(1, 10) / 100) * int(waveNum / 5)
+        speed = 7 + randint(-1, 1) + int(1.5 * int(waveNum / 5))
+
+        zombieList.append(Zombie(960, 500, 0.35, speed, 1, player.playerPos, health, damage))
+
+    return zombieList
+
 
 def menu():
 
@@ -561,21 +617,60 @@ def shop():
                             pos = 1
                         elif shopArea == 1:
                             #buy Skorpian
-                            if pos == 1 and not player.hasWeapon[1] and player.money >= 500:
+                            if pos == 1 and not player.hasWeapon[1] and player.money >= 1000:
                                 player.hasWeapon[1] = True
                                 player.money -= 500
                             #buy assault Rifle
-                            if pos == 2 and not player.hasWeapon[2] and player.money >= 1000:
+                            if pos == 2 and not player.hasWeapon[2] and player.money >= 5000:
                                 player.hasWeapon[2] = True
                                 player.money -= 1000
                             #buy Knife
-                            if pos == 3 and not player.hasWeapon[3] and player.money >= 10000:
+                            if pos == 3 and not player.hasWeapon[3] and player.money >= 50000:
                                 player.hasWeapon[3] = True
                                 player.money -= 10000
                             #buy Flamethrower
-                            if pos == 3 and not player.hasWeapon[4] and player.money >= 5000:
+                            if pos == 4 and not player.hasWeapon[4] and player.money >= 10000:
                                 player.hasWeapon[4] = True
                                 player.money -= 5000
+
+                        elif shopArea == 2:
+                            #buy Small Bullets
+                            if pos == 1 and player.money >= 10:
+                                player.bulletSAmmo += 10
+                                player.money -= 10
+                            #buy Large Bullets
+                            if pos == 2 and player.money >= 25:
+                                player.bulletLAmmo += 10
+                                player.money -= 25
+                            #buy Knives
+                            if pos == 3 and player.money >= 200:
+                                player.knifeAmmo += 1
+                                player.money -= 200
+                            #buy Flamethrower
+                            if pos == 4 and player.money >= 100:
+                                player.fireAmmo += 10
+                                player.money -= 100
+
+                        elif shopArea == 3:
+                            #buy Armor
+                            if pos == 1 and player.money >= 250 and player.armor < 0.50:
+                                player.armor += 0.05
+                                if player.armor > 0.5:
+                                    player.armor = 0.5
+                                player.money -= 250
+                            #buy Health
+                            if pos == 2 and player.money >= 50:
+                                player.health += 10
+                                if player.health > 100:
+                                    player.health = 100
+                                player.money -= 50
+                            #buy Money Upgrade
+                            if pos == 3 and player.money >= 500 and player.moneyUpgrade < 1:
+                                player.moneyUpgrade += 0.05
+                                if player.moneyUpgrade > 1:
+                                    player.moneyUpgrade = 1
+                                player.money -= 500
+
 
 
 
