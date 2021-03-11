@@ -85,7 +85,7 @@ class Pistol(Weapon):
         super().__init__(self.sprites, posX, posY, 0, direction)
 
     def getProj(self, direction):
-        return BulletSmallP(960, 600, direction)
+        return BulletSmallP(960, 588, direction)
 
 class Flamethrower(Weapon):
     def __init__(self, posX, posY, direction):
@@ -116,19 +116,19 @@ class Skorpian(Weapon):
         self.hold = True
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
         self.numProj = 0
-        self.fireRate = 0.12
+        self.fireRate = 0.15
 
         self.switchProjDir = False
 
         super().__init__(self.sprites, posX, posY, 0, direction)
 
     def getProj(self, direction):
-        return BulletSmallP(960, 600, direction)
+        return BulletSmallP(960, 584, direction)
 
 class AssaultRifle(Weapon):
     def __init__(self, posX, posY, direction):
         self.sprites = []
-        self.sprites.append(pygame.image.load('Images/AssaultRifle1.png'))
+        self.sprites.append(pygame.image.load('Images/AssaultRifle.png'))
 
         self.hold = True
         self.maxProj = 99999999999999999999999999999999999999999999999999999999999999999
@@ -140,5 +140,5 @@ class AssaultRifle(Weapon):
         super().__init__(self.sprites, posX, posY, 0, direction)
 
     def getProj(self, direction):
-        return BulletLargeP(960, 600, direction)
+        return BulletLargeP(960, 590, direction)
 

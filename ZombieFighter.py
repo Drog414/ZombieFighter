@@ -18,7 +18,7 @@ pygame.display.set_caption("Zombie Fighter")
 
 class Zombie(pygame.sprite.Sprite):
 
-    def __init__(self, posX, posY, aSpeed, mSpeed, direction, playerPos, health, damage):
+    def __init__(self, posX, posY, aSpeed, mSpeed, direction, playerPos, health, damage, waveNum):
         super().__init__()
 
         self.sprites = []
@@ -53,7 +53,7 @@ class Zombie(pygame.sprite.Sprite):
         self.health = health
         self.damage = damage
 
-        self.moneyUponDeath = int(randint(7, 13) / 10 * self.health)
+        self.moneyUponDeath = int(randint(7, 13) / 10 * self.health) * (5 * int(waveNum / 5) + 1)
 
     def switchDirection(self):
         self.direction *= -1
@@ -112,11 +112,14 @@ class Zombie(pygame.sprite.Sprite):
 class Player(pygame.sprite.Sprite):
 
     def __init__(self, width, height, mSpeed):
-        # Call the parent class (Sprite) constructor
+
         super().__init__()
 
-        self.image = pygame.Surface([width, height])
-        self.image.fill((255, 255, 255))
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Player.png'))
+
+        self.currentSprite = 0
+        self.image = self.sprites[self.currentSprite]
 
         # Fetch the rectangle object that has the dimensions of the image
         # Update the position of this object by setting the values of rect.x and rect.y
@@ -132,7 +135,7 @@ class Player(pygame.sprite.Sprite):
 
         self.movingSpeed = mSpeed
 
-        self.bulletSAmmo = 50000
+        self.bulletSAmmo = 50
         self.bulletLAmmo = 0
         self.knifeAmmo = 0
         self.fireAmmo = 0
@@ -145,7 +148,7 @@ class Player(pygame.sprite.Sprite):
         self.hasWeapon.append(False)
 
 
-        self.money = 1000000
+        self.money = 100000000
         self.moneyUpgrade = 0
 
     def takeDamage(self, damage):
@@ -160,6 +163,7 @@ healthBar = pygame.image.load('Images/HealthBar.png')
 armor = pygame.image.load('Images/Armor.png')
 ammoBox = pygame.image.load('Images/AmmoBox.png')
 money = pygame.image.load('Images/Money.png')
+smallHealth = pygame.image.load('Images/SmallHealth.png')
 
 font = pygame.font.SysFont(None, 100)
 smallFont = pygame.font.SysFont(None, 50)
@@ -281,6 +285,8 @@ def main():
                                         break
                             weaponGroup.remove(weapons[currentWeapon])
                             currentWeapon += 1
+                            if currentWeapon >= len(weapons):
+                                currentWeapon = 0
                             while True:
                                 if not player.hasWeapon[currentWeapon]:
                                     currentWeapon += 1
@@ -288,8 +294,6 @@ def main():
                                         currentWeapon = 0
                                 else:
                                     break
-                            if currentWeapon >= len(weapons):
-                                currentWeapon = 0
                             weaponGroup.add(weapons[currentWeapon])
                             weapons[currentWeapon].direction = player.direction
                             fireRateCounter = 1
@@ -304,6 +308,8 @@ def main():
                                         break
                             weaponGroup.remove(weapons[currentWeapon])
                             currentWeapon -= 1
+                            if currentWeapon < 0:
+                                currentWeapon = len(weapons) - 1
                             while True:
                                 if not player.hasWeapon[currentWeapon]:
                                     currentWeapon -= 1
@@ -311,8 +317,6 @@ def main():
                                         currentWeapon = len(weapons) - 1
                                 else:
                                     break
-                            if currentWeapon < 0:
-                                currentWeapon = len(weapons) - 1
                             weaponGroup.add(weapons[currentWeapon])
                             weapons[currentWeapon].direction = player.direction
                             fireRateCounter = 1
@@ -380,7 +384,7 @@ def main():
                                 weapons[currentWeapon].numProj -= 1
 
 
-                DISPLAYSURF.fill((69, 69, 69))
+                DISPLAYSURF.fill((42, 42, 42))
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 600, 10, 200))
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1050 - player.playerPos + PLAYAREA, 600, 10, 200))
@@ -411,8 +415,8 @@ def main():
                     lose = True
                     inLevel = False
 
-                projectileGroup.draw(DISPLAYSURF)
                 playerGroup.draw(DISPLAYSURF)
+                projectileGroup.draw(DISPLAYSURF)
                 weaponGroup.draw(DISPLAYSURF)
                 zombieGroup.draw(DISPLAYSURF)
 
@@ -493,7 +497,7 @@ def setWave(waveNum):
         damage = 0.25 + (randint(1, 10) / 100) * int(waveNum / 5)
         speed = 7 + randint(-1, 1) + int(1.5 * int(waveNum / 5))
 
-        zombieList.append(Zombie(960, 500, 0.35, speed, 1, player.playerPos, health, damage))
+        zombieList.append(Zombie(0, 500, 0.35, speed, 1, player.playerPos, health, damage, waveNum))
 
     return zombieList
 
@@ -557,7 +561,7 @@ def menu():
             img = smallFont.render("Use the arrow keys to move", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + int(1080 * 0.05)))
             DISPLAYSURF.blit(img, imgPos)
-            img = smallFont.render("Press Z to fire your weapon", True, (255, 255, 255))
+            img = smallFont.render("Either press or hold Z to fire your weapon", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), int(1080 / 4) + int(1080 * 0.05) + 2 * int(1080 * 0.05)))
             DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Press Shift and X to change weapons", True, (255, 255, 255))
@@ -619,19 +623,19 @@ def shop():
                             #buy Skorpian
                             if pos == 1 and not player.hasWeapon[1] and player.money >= 1000:
                                 player.hasWeapon[1] = True
-                                player.money -= 500
+                                player.money -= 1000
                             #buy assault Rifle
                             if pos == 2 and not player.hasWeapon[2] and player.money >= 5000:
                                 player.hasWeapon[2] = True
-                                player.money -= 1000
+                                player.money -= 5000
                             #buy Knife
-                            if pos == 3 and not player.hasWeapon[3] and player.money >= 50000:
+                            if pos == 3 and not player.hasWeapon[3] and player.money >= 20000:
                                 player.hasWeapon[3] = True
-                                player.money -= 10000
+                                player.money -= 20000
                             #buy Flamethrower
                             if pos == 4 and not player.hasWeapon[4] and player.money >= 10000:
                                 player.hasWeapon[4] = True
-                                player.money -= 5000
+                                player.money -= 10000
 
                         elif shopArea == 2:
                             #buy Small Bullets
@@ -648,7 +652,7 @@ def shop():
                                 player.money -= 200
                             #buy Flamethrower
                             if pos == 4 and player.money >= 100:
-                                player.fireAmmo += 10
+                                player.fireAmmo += 5
                                 player.money -= 100
 
                         elif shopArea == 3:
@@ -659,7 +663,7 @@ def shop():
                                     player.armor = 0.5
                                 player.money -= 250
                             #buy Health
-                            if pos == 2 and player.money >= 50:
+                            if pos == 2 and player.money >= 50 and player.health < 100:
                                 player.health += 10
                                 if player.health > 100:
                                     player.health = 100
@@ -680,6 +684,44 @@ def shop():
                     pos += 1
 
         DISPLAYSURF.fill((69, 69, 69))
+
+        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (0, 0, 420, 400))
+        DISPLAYSURF.blit(armor, (8, 0))
+        DISPLAYSURF.blit(smallHealth, (148, 0))
+        DISPLAYSURF.blit(money, (288, 6))
+
+        img = smallFont.render(str(int(player.armor * 2 * 100)) + "%", True, (255, 255, 255))
+        imgPos = img.get_rect(center=(70, 130))
+        DISPLAYSURF.blit(img, imgPos)
+
+        img = smallFont.render(str(int(player.health)) + "%", True, (255, 255, 255))
+        imgPos = img.get_rect(center=(210, 130))
+        DISPLAYSURF.blit(img, imgPos)
+
+        img = smallFont.render("$" + str(player.money), True, (255, 255, 255))
+        imgPos = img.get_rect(center=(350, 130))
+        DISPLAYSURF.blit(img, imgPos)
+
+        img = smallFont.render("Small Bullets: " + str(player.bulletSAmmo), True, (255, 255, 255))
+        imgPos = img.get_rect(center=(210, 190))
+        DISPLAYSURF.blit(img, imgPos)
+        img = smallFont.render("Large Bullets: " + str(player.bulletLAmmo), True, (255, 255, 255))
+        imgPos = img.get_rect(center=(210, 230))
+        DISPLAYSURF.blit(img, imgPos)
+        img = smallFont.render("Knives: " + str(player.knifeAmmo), True, (255, 255, 255))
+        imgPos = img.get_rect(center=(210, 270))
+        DISPLAYSURF.blit(img, imgPos)
+        img = smallFont.render("Flamethrower Gas: " + str(player.fireAmmo), True, (255, 255, 255))
+        imgPos = img.get_rect(center=(210, 310))
+        DISPLAYSURF.blit(img, imgPos)
+
+        img = smallFont.render("Money Upgrade: +" + str(int(player.moneyUpgrade * 100)) + "%", True, (255, 255, 255))
+        imgPos = img.get_rect(center=(210, 370))
+        DISPLAYSURF.blit(img, imgPos)
+
+        pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1500, 0, 420, 400))
+
+
         if shopArea == 0:
             maxPos = 4
             img = font.render("- Shop - ", True, (255, 255, 255))
@@ -690,21 +732,33 @@ def shop():
             DISPLAYSURF.blit(img, imgPos)
             if pos == 1:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Purchase Weapons", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Ammo", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 2:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Purchase Ammo", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Upgrades & Health", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 4 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 3:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Upgrades and Health", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Play", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 4:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Start Wave", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
 
 
         elif shopArea == 1:
@@ -717,26 +771,53 @@ def shop():
             DISPLAYSURF.blit(img, imgPos)
             if pos == 1:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
-            img = smallFont.render("M16", True, (255, 255, 255))
+                if player.hasWeapon[1]:
+                    img = smallFont.render("Already Purchased", True, (255, 255, 255))
+                else:
+                    img = smallFont.render("Cost: $1000", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
+            img = smallFont.render("Assault Rifle", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 2.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 2:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                if player.hasWeapon[2]:
+                    img = smallFont.render("Already Purchased", True, (255, 255, 255))
+                else:
+                    img = smallFont.render("Cost: $5000", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Knife", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 3:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                if player.hasWeapon[3]:
+                    img = smallFont.render("Already Purchased", True, (255, 255, 255))
+                else:
+                    img = smallFont.render("Cost: $20000", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Flamethrower", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 3.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 4:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                if player.hasWeapon[4]:
+                    img = smallFont.render("Already Purchased", True, (255, 255, 255))
+                else:
+                    img = smallFont.render("Cost: $10000", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Back", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 4 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 5:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Back", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
 
         elif shopArea == 2:
             maxPos = 5
@@ -748,26 +829,53 @@ def shop():
             DISPLAYSURF.blit(img, imgPos)
             if pos == 1:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Cost: $10 for 10", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 100))
+                DISPLAYSURF.blit(img, imgPos)
+                img = smallFont.render("Pistol and Skorpian", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 300))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Large Bullets", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 2.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 2:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Cost: $25 for 10", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 100))
+                DISPLAYSURF.blit(img, imgPos)
+                img = smallFont.render("Assault Rifle", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 300))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Knife", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 3:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Cost: $200 for 1", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 100))
+                DISPLAYSURF.blit(img, imgPos)
+                img = smallFont.render("Insta-Kill Knife", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 300))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Flamethrower Gas", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 3.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 4:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Cost: $100 for 5", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 100))
+                DISPLAYSURF.blit(img, imgPos)
+                img = smallFont.render("Flamethrower", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 300))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Back", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 4 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 5:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Back", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
 
         elif shopArea == 3:
             maxPos = 4
@@ -779,21 +887,42 @@ def shop():
             DISPLAYSURF.blit(img, imgPos)
             if pos == 1:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                if player.armor == 0.5:
+                    img = smallFont.render("Max Armor", True, (255, 255, 255))
+                else:
+                    img = smallFont.render("Cost: $250", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Health", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 2.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 2:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                if player.health == 100:
+                    img = smallFont.render("Max Health", True, (255, 255, 255))
+                else:
+                    img = smallFont.render("Cost: $50", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Money Upgrade", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 3 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 3:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                if player.moneyUpgrade == 1:
+                    img = smallFont.render("Max Upgrade", True, (255, 255, 255))
+                else:
+                    img = smallFont.render("Cost: $500", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
             img = smallFont.render("Back", True, (255, 255, 255))
             imgPos = img.get_rect(center=(int(1920 / 2), 3.5 * int(1080 / 6)))
             DISPLAYSURF.blit(img, imgPos)
             if pos == 4:
                 pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (imgPos.x - 3, imgPos.y - 3, imgPos.width + 6, imgPos.height + 6), 2)
+                img = smallFont.render("Back", True, (255, 255, 255))
+                imgPos = img.get_rect(center=(1710, 200))
+                DISPLAYSURF.blit(img, imgPos)
 
         elif shopArea == 4:
             start = True

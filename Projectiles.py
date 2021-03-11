@@ -70,18 +70,7 @@ class KnifeP(Projectile):
 
         self.deleteOnImpact = True
 
-        super().__init__(self.sprites, posX, posY, 0.4, 20, direction, 200)
-
-class ExplosionP(Projectile):
-    def __init__(self, posX, posY, direction):
-        self.sprites = []
-        for i in range(16):
-            self.sprites.append(pygame.image.load('Images/Explosion' + str(i) + '.png'))
-
-        self.deleteOnImpact = True
-
-        #Explosion should eventually do 0 damage, maybe make a seperate effects class?
-        super().__init__(self.sprites, posX, posY, 0.4, 0, direction, 50)
+        super().__init__(self.sprites, posX, posY, 0.4, 20, direction, 300)
 
 class BulletSmallP(Projectile):
     def __init__(self, posX, posY, direction):
@@ -110,7 +99,7 @@ class FireP(Projectile):
 
         self.deleteOnImpact = False
 
-        super().__init__(self.sprites, posX, posY, 0.3, 0, direction, 2)
+        super().__init__(self.sprites, posX, posY, 0.3, 0, direction, 2.5)
 
         if self.direction == -1:
             self.image = self.sprites1[int(self.currentSprite)]
