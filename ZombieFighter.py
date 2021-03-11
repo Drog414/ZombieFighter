@@ -53,7 +53,7 @@ class Zombie(pygame.sprite.Sprite):
         self.health = health
         self.damage = damage
 
-        self.moneyUponDeath = int(randint(7, 13) / 10 * self.health) * (5 * int(waveNum / 5) + 1)
+        self.moneyUponDeath = int(randint(7, 13) / 10 * self.health)
 
     def switchDirection(self):
         self.direction *= -1
@@ -72,8 +72,8 @@ class Zombie(pygame.sprite.Sprite):
         spawn = False
         while not spawn:
             posX = randint(0, PLAYAREA)
-            if 100 < player.playerPos < PLAYAREA - 100:
-                if not (player.playerPos - 500 < posX < player.playerPos + 500):
+            if 100 < playerPos < PLAYAREA - 100:
+                if not (460 < posX - playerPos < 1460):
                     spawn = True
             else:
                 spawn = True
@@ -82,7 +82,8 @@ class Zombie(pygame.sprite.Sprite):
             self.direction = 1
         else:
             self.direction = -1
-
+        print(posX)
+        print(playerPos)
         self.posX = posX
         self.rect.midtop = [posX - playerPos, self.posY]
 
@@ -111,7 +112,7 @@ class Zombie(pygame.sprite.Sprite):
 
 class Player(pygame.sprite.Sprite):
 
-    def __init__(self, width, height, mSpeed):
+    def __init__(self, mSpeed):
 
         super().__init__()
 
@@ -148,7 +149,7 @@ class Player(pygame.sprite.Sprite):
         self.hasWeapon.append(False)
 
 
-        self.money = 100000000
+        self.money = 0
         self.moneyUpgrade = 0
 
     def takeDamage(self, damage):
@@ -157,7 +158,35 @@ class Player(pygame.sprite.Sprite):
     def addMoney(self, money):
         self.money += money + int(money * self.moneyUpgrade)
 
-    #def upgrade(self):
+class Grass(pygame.sprite.Sprite):
+
+    def __init__(self, pos):
+
+        super().__init__()
+
+        self.sprites = []
+        self.sprites.append(pygame.image.load('Images/Grass.png'))
+
+        self.currentSprite = 0
+        self.image = self.sprites[self.currentSprite]
+
+        # Fetch the rectangle object that has the dimensions of the image
+        # Update the position of this object by setting the values of rect.x and rect.y
+        self.rect = self.image.get_rect()
+        self.pos = pos
+        self.rect.topleft = [pos, 750]
+
+    def update(self, move):
+        self.pos += move
+
+        if self.pos < -300:
+            self.pos += 2400
+        elif self.pos > 2100:
+            self.pos -= 2400
+
+        self.rect.topleft = [self.pos, 750]
+
+
 
 healthBar = pygame.image.load('Images/HealthBar.png')
 armor = pygame.image.load('Images/Armor.png')
@@ -169,7 +198,7 @@ font = pygame.font.SysFont(None, 100)
 smallFont = pygame.font.SysFont(None, 50)
 
 #Constants
-PLAYAREA = 6000
+PLAYAREA = 8000
 
 def main():
 
@@ -179,9 +208,21 @@ def main():
     zombieGroup = pygame.sprite.Group()
 
     global player
-    player = Player(100, 300, 10)
+    player = Player(10)
     playerGroup = pygame.sprite.Group()
     playerGroup.add(player)
+
+    global grassGroup
+    grassGroup = pygame.sprite.Group()
+    grassGroup.add(Grass(-300))
+    grassGroup.add(Grass(0))
+    grassGroup.add(Grass(300))
+    grassGroup.add(Grass(600))
+    grassGroup.add(Grass(900))
+    grassGroup.add(Grass(1200))
+    grassGroup.add(Grass(1500))
+    grassGroup.add(Grass(1800))
+    grassGroup.add(Grass(2100))
 
     weapons = []
     weapons.append(Pistol(960, 600, player.direction))
@@ -270,12 +311,6 @@ def main():
                                     projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                                     player.knifeAmmo -= 1
 
-
-                        if event.key == K_SPACE and zombiesSpawned < len(zombieList):
-                            zombieList[zombiesSpawned].setSpawn(player.playerPos)
-                            zombieGroup.add(zombieList[zombiesSpawned])
-                            zombiesSpawned += 1
-
                         if event.key == K_x:
                             if type(weapons[currentWeapon]) is Flamethrower:
                                 for proj in projectileGroup:
@@ -323,7 +358,7 @@ def main():
 
 
             if not pauseState:
-                if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 0:
+                if pygame.key.get_pressed()[pygame.K_LEFT] and player.playerPos > 1000:
                     player.playerPos -= player.movingSpeed
                     player.direction = -1
                     weapons[currentWeapon].direction = -1
@@ -336,8 +371,9 @@ def main():
                                     projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                                     weapons[currentWeapon].numProj -= 1
                                     break
+                    grassGroup.update(5)
 
-                elif pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA:
+                elif pygame.key.get_pressed()[pygame.K_RIGHT] and player.playerPos < PLAYAREA - 1000:
                     player.playerPos += player.movingSpeed
                     player.direction = 1
                     weapons[currentWeapon].direction = 1
@@ -350,6 +386,7 @@ def main():
                                     projectileGroup.add(weapons[currentWeapon].getProj(player.direction))
                                     weapons[currentWeapon].numProj -= 1
                                     break
+                    grassGroup.update(-5)
 
                 if weapons[currentWeapon].hold:
 
@@ -385,9 +422,7 @@ def main():
 
 
                 DISPLAYSURF.fill((42, 42, 42))
-                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
-                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (860 - player.playerPos, 600, 10, 200))
-                pygame.draw.rect(DISPLAYSURF, (0, 0, 0), (1050 - player.playerPos + PLAYAREA, 600, 10, 200))
+                pygame.draw.rect(DISPLAYSURF, (131, 101, 57), (860 - player.playerPos, 800, PLAYAREA + 200, 280))
 
                 for zombie in zombieGroup:
                     if pygame.sprite.spritecollide(zombie, projectileGroup, False):
@@ -404,6 +439,10 @@ def main():
 
                     if pygame.sprite.spritecollide(zombie, playerGroup, False):
                         player.takeDamage(zombie.dealDamage())
+                        if player.armor > 0:
+                            player.armor -= 0.0001
+                            if player.armor < 0:
+                                player.armor = 0
 
                 for proj in projectileGroup:
                     if proj.posX + player.playerPos > PLAYAREA + 1000 or proj.posX + player.playerPos < -100:
@@ -415,10 +454,16 @@ def main():
                     lose = True
                     inLevel = False
 
+                if spawnZombie(waveNum) and zombiesSpawned < len(zombieList):
+                    zombieList[zombiesSpawned].setSpawn(player.playerPos)
+                    zombieGroup.add(zombieList[zombiesSpawned])
+                    zombiesSpawned += 1
+
                 playerGroup.draw(DISPLAYSURF)
                 projectileGroup.draw(DISPLAYSURF)
                 weaponGroup.draw(DISPLAYSURF)
                 zombieGroup.draw(DISPLAYSURF)
+                grassGroup.draw(DISPLAYSURF)
 
 
                 playerGroup.update()
@@ -501,6 +546,13 @@ def setWave(waveNum):
 
     return zombieList
 
+def spawnZombie(waveNum):
+    chance = randint(1, 100)
+    limit = 2
+    waveChance = randint(1, 3)
+    if chance <= limit and waveChance <= 2:
+        return True
+    return False
 
 def menu():
 
@@ -711,7 +763,7 @@ def shop():
         img = smallFont.render("Knives: " + str(player.knifeAmmo), True, (255, 255, 255))
         imgPos = img.get_rect(center=(210, 270))
         DISPLAYSURF.blit(img, imgPos)
-        img = smallFont.render("Flamethrower Gas: " + str(player.fireAmmo), True, (255, 255, 255))
+        img = smallFont.render("Flamethrower Gas: " + str(int(player.fireAmmo)), True, (255, 255, 255))
         imgPos = img.get_rect(center=(210, 310))
         DISPLAYSURF.blit(img, imgPos)
 
