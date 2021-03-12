@@ -99,7 +99,7 @@ class FireP(Projectile):
 
         self.deleteOnImpact = False
 
-        super().__init__(self.sprites, posX, posY, 0.3, 0, direction, 2.5)
+        super().__init__(self.sprites, posX, posY, 0.3, 0, direction, 4)
 
         if self.direction == -1:
             self.image = self.sprites1[int(self.currentSprite)]
